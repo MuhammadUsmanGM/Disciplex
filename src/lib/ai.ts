@@ -7,7 +7,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Bottleneck, ReckoningPayload, ReckoningResult } from '@/src/types/reckoning';
+import { ReckoningPayload, ReckoningResult } from '@/src/types/reckoning';
 
 // Initialize Gemini API
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;

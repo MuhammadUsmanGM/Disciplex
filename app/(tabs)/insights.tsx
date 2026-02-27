@@ -1,10 +1,12 @@
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+    ActivityIndicator,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from 'react-native';
 
@@ -14,14 +16,18 @@ import {
     GOLD,
     RED,
     SURFACE,
+    SURFACE_2,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     getScoreColor,
 } from '@/constants/theme';
+import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
+import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
 import { detectBottleneck } from '@/src/lib/scoring';
 import { useHabitStore } from '@/src/store/useHabitStore';
+import { supabase } from '@/src/lib/supabase';
 
 const BAR_MAX_HEIGHT = 80;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -42,11 +48,36 @@ function getDayLabel(isoDate: string): string {
 }
 
 export default function InsightsScreen() {
-  const { habits, completions, scoreHistory, identityDebt } = useHabitStore();
+  const { habits, completions, scoreHistory, identityDebt, getLast7DayScores } = useHabitStore();
+  const [identityClaim, setIdentityClaim] = useState<string>('');
+  const [refuseToBe, setRefuseToBe] = useState<string>('');
+  
+  const { loading, error, reckoning, generateReckoning, reset } = useReckoning();
 
   useFocusEffect(
     useCallback(() => {
       useHabitStore.getState().recalculateAndSaveScore();
+    }, []),
+  );
+
+  // Load identity data
+  useFocusEffect(
+    useCallback(() => {
+      const fetchIdentity = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('users')
+            .select('identity_claim, refuse_to_be')
+            .eq('id', user.id)
+            .single();
+          if (data) {
+            setIdentityClaim(data.identity_claim || '');
+            setRefuseToBe(data.refuse_to_be || '');
+          }
+        }
+      };
+      fetchIdentity();
     }, []),
   );
 
@@ -117,6 +148,65 @@ export default function InsightsScreen() {
   }, [scoreHistory]);
 
   const hasData = scoreHistory.length > 0;
+
+  // Calculate week score (average of last 7 days)
+  const weekScore = useMemo(() => {
+    const last7 = scoreHistory.slice(-7).map((s) => s.score);
+    if (last7.length === 0) return 0;
+    return last7.reduce((a, b) => a + b, 0) / last7.length;
+  }, [scoreHistory]);
+
+  // Calculate previous week score for trend
+  const previousWeekScore = useMemo(() => {
+    const prior7 = scoreHistory.slice(-14, -7).map((s) => s.score);
+    if (prior7.length === 0) return weekScore;
+    return prior7.reduce((a, b) => a + b, 0) / prior7.length;
+  }, [scoreHistory, weekScore]);
+
+  // Calculate 30-day trend
+  const trend30d = useMemo(() => {
+    const last30 = scoreHistory.slice(-30).map((s) => s.score);
+    if (last30.length < 2) return 0;
+    const firstHalf = last30.slice(0, Math.floor(last30.length / 2));
+    const secondHalf = last30.slice(Math.floor(last30.length / 2));
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    if (firstAvg === 0) return 0;
+    return Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
+  }, [scoreHistory]);
+
+  // Handle generate reckoning
+  const handleGenerateReckoning = useCallback(async () => {
+    if (!identityClaim || !refuseToBe) {
+      return;
+    }
+
+    const habitsData = habits.map((h) => {
+      const completedCount = last7Dates.filter((date) => {
+        const dayCompletions = completions.filter((c) => c.date === date && c.completed);
+        return dayCompletions.some((c) => c.habit_id === h.id);
+      }).length;
+      return {
+        name: h.name,
+        completionRate: completedCount / 7,
+        isNonNegotiable: h.is_non_negotiable,
+      };
+    });
+
+    const payload = buildReckoningPayload({
+      identityClaim,
+      refuseToBe,
+      weekScore: Math.round(weekScore * 10) / 10,
+      previousWeekScore: Math.round(previousWeekScore * 10) / 10,
+      trend30d,
+      volatilityIndex: volatility || 0,
+      identityAlignment: Math.round(weekScore * 10) / 10,
+      identityDebt,
+      habits: habitsData,
+    });
+
+    await generateReckoning(payload);
+  }, [identityClaim, refuseToBe, habits, completions, last7Dates, weekScore, previousWeekScore, trend30d, volatility, identityDebt, generateReckoning]);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -268,6 +358,60 @@ export default function InsightsScreen() {
             </Text>
           )}
         </View>
+
+        {/* Weekly AI Reckoning */}
+        {identityClaim && (
+          <View style={styles.reckoningSection}>
+            <Text style={styles.reckoningTitle}>Weekly AI Reckoning</Text>
+            <Text style={styles.reckoningSubtitle}>
+              The verdict on who you are becoming
+            </Text>
+
+            {!reckoning && !loading && (
+              <TouchableOpacity
+                style={styles.generateButton}
+                onPress={handleGenerateReckoning}
+              >
+                <Text style={styles.generateButtonText}>Generate Reckoning</Text>
+              </TouchableOpacity>
+            )}
+
+            {loading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={GOLD} />
+                <Text style={styles.loadingText}>Analyzing your data...</Text>
+              </View>
+            )}
+
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={handleGenerateReckoning}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {reckoning && (
+              <>
+                <ReckoningCard
+                  reckoning={reckoning}
+                  weekScore={weekScore}
+                  trend={trend?.delta || 0}
+                />
+                <TouchableOpacity
+                  style={styles.newReckoningButton}
+                  onPress={handleGenerateReckoning}
+                >
+                  <Text style={styles.newReckoningButtonText}>Generate New Reckoning</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -489,5 +633,90 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     fontSize: 13,
     lineHeight: 20,
+  },
+
+  // AI Reckoning Section
+  reckoningSection: {
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  reckoningTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  reckoningSubtitle: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    marginBottom: 16,
+  },
+  generateButton: {
+    backgroundColor: GOLD,
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  generateButtonText: {
+    color: '#0A0A0A',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  loadingContainer: {
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    marginTop: 12,
+    fontFamily: 'ui-monospace',
+  },
+  errorContainer: {
+    backgroundColor: '#0F0A0A',
+    borderWidth: 1,
+    borderColor: RED,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: RED,
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: SURFACE_2,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  retryButtonText: {
+    color: TEXT_PRIMARY,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  newReckoningButton: {
+    backgroundColor: SURFACE_2,
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  newReckoningButtonText: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: 'ui-monospace',
   },
 });

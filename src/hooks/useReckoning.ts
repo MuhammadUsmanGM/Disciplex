@@ -87,7 +87,6 @@ export function buildReckoningPayload(input: {
   }>;
 }): Omit<ReckoningPayload, 'bottleneck_habit' | 'bottleneck_pattern'> {
   const weekTrend = calculateWeekTrend(input.weekScore, input.previousWeekScore);
-  const mostMissed = getMostMissedHabit(input.habits);
 
   return {
     identity_claim: input.identityClaim,
