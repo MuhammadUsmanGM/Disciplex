@@ -24,7 +24,9 @@ import {
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
+import { Paywall } from '@/src/components/ui/Paywall';
 import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
+import { useSubscription } from '@/src/hooks/useSubscription';
 import { detectBottleneck } from '@/src/lib/scoring';
 import { useHabitStore } from '@/src/store/useHabitStore';
 import { supabase } from '@/src/lib/supabase';
@@ -53,6 +55,7 @@ export default function InsightsScreen() {
   const [refuseToBe, setRefuseToBe] = useState<string>('');
   
   const { loading, error, reckoning, generateReckoning, reset } = useReckoning();
+  const { isPro, showPaywall, setShowPaywall, purchasePro, purchaseError } = useSubscription();
 
   useFocusEffect(
     useCallback(() => {
@@ -359,59 +362,100 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        {/* Weekly AI Reckoning */}
+        {/* Weekly AI Reckoning - Pro Feature */}
         {identityClaim && (
           <View style={styles.reckoningSection}>
-            <Text style={styles.reckoningTitle}>Weekly AI Reckoning</Text>
-            <Text style={styles.reckoningSubtitle}>
-              The verdict on who you are becoming
-            </Text>
+            <View style={styles.reckoningHeader}>
+              <View>
+                <Text style={styles.reckoningTitle}>Weekly AI Reckoning</Text>
+                <Text style={styles.reckoningSubtitle}>
+                  The verdict on who you are becoming
+                </Text>
+              </View>
+              {!isPro && (
+                <View style={styles.proBadge}>
+                  <Text style={styles.proBadgeText}>PRO</Text>
+                </View>
+              )}
+            </View>
 
-            {!reckoning && !loading && (
+            {!isPro ? (
+              // Free user - show locked state
               <TouchableOpacity
-                style={styles.generateButton}
-                onPress={handleGenerateReckoning}
+                style={styles.lockedReckoning}
+                onPress={() => setShowPaywall(true)}
               >
-                <Text style={styles.generateButtonText}>Generate Reckoning</Text>
+                <View style={styles.lockedContent}>
+                  <Text style={styles.lockIcon}>🔒</Text>
+                  <Text style={styles.lockedTitle}>Pro Feature</Text>
+                  <Text style={styles.lockedSubtitle}>
+                    AI-powered verdict, bottleneck analysis, and directive
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.upgradeButton}
+                  onPress={() => setShowPaywall(true)}
+                >
+                  <Text style={styles.upgradeButtonText}>Upgrade to Pro</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
-            )}
-
-            {loading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={GOLD} />
-                <Text style={styles.loadingText}>Analyzing your data...</Text>
-              </View>
-            )}
-
-            {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity
-                  style={styles.retryButton}
-                  onPress={handleGenerateReckoning}
-                >
-                  <Text style={styles.retryButtonText}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {reckoning && (
+            ) : (
+              // Pro user - show full reckoning
               <>
-                <ReckoningCard
-                  reckoning={reckoning}
-                  weekScore={weekScore}
-                  trend={trend?.delta || 0}
-                />
-                <TouchableOpacity
-                  style={styles.newReckoningButton}
-                  onPress={handleGenerateReckoning}
-                >
-                  <Text style={styles.newReckoningButtonText}>Generate New Reckoning</Text>
-                </TouchableOpacity>
+                {!reckoning && !loading && (
+                  <TouchableOpacity
+                    style={styles.generateButton}
+                    onPress={handleGenerateReckoning}
+                  >
+                    <Text style={styles.generateButtonText}>Generate Reckoning</Text>
+                  </TouchableOpacity>
+                )}
+
+                {loading && (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={GOLD} />
+                    <Text style={styles.loadingText}>Analyzing your data...</Text>
+                  </View>
+                )}
+
+                {error && (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity
+                      style={styles.retryButton}
+                      onPress={handleGenerateReckoning}
+                    >
+                      <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {reckoning && (
+                  <>
+                    <ReckoningCard
+                      reckoning={reckoning}
+                      weekScore={weekScore}
+                      trend={trend?.delta || 0}
+                    />
+                    <TouchableOpacity
+                      style={styles.newReckoningButton}
+                      onPress={handleGenerateReckoning}
+                    >
+                      <Text style={styles.newReckoningButtonText}>Generate New Reckoning</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </>
             )}
           </View>
         )}
+
+        {/* Paywall Modal */}
+        <Paywall
+          visible={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          onPurchase={purchasePro}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -640,6 +684,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
+  reckoningHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   reckoningTitle: {
     color: TEXT_PRIMARY,
     fontSize: 18,
@@ -650,7 +700,61 @@ const styles = StyleSheet.create({
   reckoningSubtitle: {
     color: TEXT_SECONDARY,
     fontSize: 13,
-    marginBottom: 16,
+    marginBottom: 0,
+  },
+  proBadge: {
+    backgroundColor: GOLD,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  proBadgeText: {
+    color: '#0A0A0A',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
+  },
+  lockedReckoning: {
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lockedContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  lockIcon: {
+    fontSize: 24,
+  },
+  lockedTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  lockedSubtitle: {
+    color: TEXT_SECONDARY,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  upgradeButton: {
+    backgroundColor: GOLD,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  upgradeButtonText: {
+    color: '#0A0A0A',
+    fontSize: 13,
+    fontWeight: '700',
   },
   generateButton: {
     backgroundColor: GOLD,

@@ -14,7 +14,9 @@ import {
   TEXT_PRIMARY,
   TEXT_SECONDARY,
 } from '@/constants/theme';
+import { Paywall } from '@/src/components/ui/Paywall';
 import { useNotifications } from '@/src/hooks/useNotifications';
+import { useSubscription } from '@/src/hooks/useSubscription';
 import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -32,10 +34,20 @@ export default function SettingsScreen() {
     cancelReckoning,
     checkAndScheduleMilestone,
   } = useNotifications();
+  const {
+    isPro,
+    tier,
+    loading: subLoading,
+    showPaywall,
+    setShowPaywall,
+    purchasePro,
+    restorePurchases: restore,
+  } = useSubscription();
 
   const [reckoningTime, setReckoningTime] = useState<string>('20:00');
   const [isSaving, setIsSaving] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   // Load user's reckoning time preference
   useEffect(() => {
@@ -105,6 +117,17 @@ export default function SettingsScreen() {
       await cancelReckoning();
     } else {
       await handleRequestPermission();
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    const success = await restore();
+    if (success) {
+      setRestoreMessage('Purchases restored successfully!');
+      setTimeout(() => setRestoreMessage(null), 3000);
+    } else {
+      setRestoreMessage('No active subscription found.');
+      setTimeout(() => setRestoreMessage(null), 3000);
     }
   };
 
@@ -180,6 +203,78 @@ export default function SettingsScreen() {
           <Text style={styles.cardLabel}>Disciplex</Text>
           <Text style={styles.versionText}>Version {appVersion}</Text>
           <Text style={styles.tagline}>The AI Discipline Operating System</Text>
+        </View>
+
+        {/* Subscription / Pro Status */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Subscription</Text>
+
+          <View style={styles.card}>
+            {isPro ? (
+              <View style={styles.proStatusRow}>
+                <View style={styles.proStatusInfo}>
+                  <View style={styles.proStatusBadge}>
+                    <Text style={styles.proStatusText}>PRO</Text>
+                  </View>
+                  <Text style={styles.proStatusLabel}>Active Subscription</Text>
+                  <Text style={styles.proStatusDetail}>
+                    {tier === 'pro' ? 'Full access to AI Reckoning and analytics' : ''}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.freeStatusRow}>
+                <View style={styles.freeStatusInfo}>
+                  <Text style={styles.freeStatusTitle}>Free Tier</Text>
+                  <Text style={styles.freeStatusDetail}>
+                    Score tracking, habit logging, basic summary
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.upgradeButtonSmall}
+                  onPress={() => setShowPaywall(true)}
+                >
+                  <Text style={styles.upgradeButtonSmallText}>Upgrade</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={styles.separator} />
+
+            {/* Restore Purchases */}
+            <TouchableOpacity
+              style={styles.pressableRow}
+              onPress={handleRestorePurchases}
+            >
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Restore Purchases</Text>
+                <Text style={styles.settingHint}>
+                  {restoreMessage || 'Recover your Pro subscription'}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+
+            {!isPro && (
+              <>
+                <View style={styles.separator} />
+                <TouchableOpacity
+                  style={styles.pressableRow}
+                  onPress={() => setShowPaywall(true)}
+                >
+                  <View style={styles.settingInfo}>
+                    <Text style={[styles.settingLabel, { color: GOLD }]}>
+                      Unlock Pro Features
+                    </Text>
+                    <Text style={styles.settingHint}>
+                      AI Reckoning, Identity Debt, advanced analytics
+                    </Text>
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
 
         {/* Notifications */}
@@ -360,6 +455,13 @@ export default function SettingsScreen() {
             It quantifies the gap between who you claim to be and what your actions prove you are.
           </Text>
         </View>
+
+        {/* Paywall Modal */}
+        <Paywall
+          visible={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          onPurchase={purchasePro}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -465,6 +567,73 @@ const styles = StyleSheet.create({
     color: TEXT_SECONDARY,
     fontSize: 13,
     lineHeight: 18,
+  },
+
+  // Subscription Section
+  proStatusRow: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  proStatusInfo: {
+    flex: 1,
+  },
+  proStatusBadge: {
+    backgroundColor: GOLD,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  proStatusText: {
+    color: '#0A0A0A',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
+  },
+  proStatusLabel: {
+    color: TEXT_PRIMARY,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  proStatusDetail: {
+    color: TEXT_SECONDARY,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  freeStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  freeStatusInfo: {
+    flex: 1,
+  },
+  freeStatusTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  freeStatusDetail: {
+    color: TEXT_SECONDARY,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  upgradeButtonSmall: {
+    backgroundColor: GOLD,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  upgradeButtonSmallText: {
+    color: '#0A0A0A',
+    fontSize: 13,
+    fontWeight: '700',
   },
 
   // Setting Row

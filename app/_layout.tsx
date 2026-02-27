@@ -6,6 +6,7 @@ import { View } from 'react-native';
 
 import { BASE } from '@/constants/theme';
 import { configureNotifications } from '@/src/lib/notifications';
+import { initializeRevenueCat } from '@/src/lib/payments';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function RootLayout() {
@@ -23,6 +24,13 @@ export default function RootLayout() {
       setOnboardingChecked(true);
     });
   }, [initialize]);
+
+  // Initialize RevenueCat when user is authenticated
+  useEffect(() => {
+    if (session?.user?.id) {
+      initializeRevenueCat(session.user.id);
+    }
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!initialized || !onboardingChecked) return;
