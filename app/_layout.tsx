@@ -1,47 +1,58 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Redirect, Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { BASE } from '@/constants/theme';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function RootLayout() {
-  const [checked, setChecked] = useState(false);
-  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const router = useRouter();
+  const segments = useSegments();
+  const { session, initialized, initialize } = useAuthStore();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   useEffect(() => {
-    async function checkOnboarding() {
-      try {
-        const val = await AsyncStorage.getItem('onboarding_complete');
-        setInitialRoute(val === 'true' ? '/(tabs)' : '/onboarding');
-      } catch (error) {
-        console.error('Error checking onboarding:', error);
-        setInitialRoute('/onboarding');
-      } finally {
-        setChecked(true);
+    initialize();
+    AsyncStorage.getItem('onboarding_complete').then((val) => {
+      setOnboardingComplete(val === 'true');
+      setOnboardingChecked(true);
+    });
+  }, [initialize]);
+
+  useEffect(() => {
+    if (!initialized || !onboardingChecked) return;
+
+    const inAuthGroup = segments[0] === ('(auth)' as never);
+    
+    if (!session) {
+      if (!inAuthGroup) {
+        router.replace('/(auth)/login' as never);
+      }
+    } else {
+      if (inAuthGroup) {
+        if (onboardingComplete) {
+          router.replace('/(tabs)' as never);
+        } else {
+          router.replace('/onboarding' as never);
+        }
       }
     }
-    checkOnboarding();
-  }, []);
+  }, [session, initialized, onboardingChecked, onboardingComplete, segments, router]);
 
-  if (!checked || initialRoute === null) {
+  if (!initialized || !onboardingChecked) {
     return <View style={{ flex: 1, backgroundColor: BASE }} />;
-  }
-
-  // Redirect to the initial route
-  if (initialRoute === '/(tabs)') {
-    return (
-      <>
-        <Redirect href="/(tabs)" />
-        <StatusBar style="light" />
-      </>
-    );
   }
 
   return (
     <>
-      <Redirect href="/onboarding" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
       <StatusBar style="light" />
     </>
   );
