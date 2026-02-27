@@ -1,6 +1,6 @@
 /**
  * Disciplex Design System — Color Tokens
- * 
+ *
  * These colors are not aesthetic choices. They are psychological instruments.
  * See: disciplex.md Section 4
  */
@@ -9,7 +9,9 @@
 export const BASE = '#0A0A0A';
 export const SURFACE = '#111111';
 export const SURFACE_2 = '#1A1A1A';
+export const SURFACE_3 = '#222222';
 export const BORDER = '#2A2A2A';
+export const BORDER_LIGHT = '#3A3A3A';
 
 // Text
 export const TEXT_PRIMARY = '#F5F5F5';
@@ -20,14 +22,61 @@ export const TEXT_MUTED = '#3A3A3A';
 export const GOLD = '#C9A84C';
 export const GOLD_DIM = '#A07830';
 export const GOLD_SUBTLE = 'rgba(201, 168, 76, 0.10)';
+export const GOLD_SUBTLE_2 = 'rgba(201, 168, 76, 0.20)';
+export const GOLD_GLOW = 'rgba(201, 168, 76, 0.40)';
 
 // Red — Consequence Only / Debt / Failure
 export const RED = '#CC0000';
+export const RED_DIM = '#990000';
 export const RED_SUBTLE = 'rgba(204, 0, 0, 0.10)';
+export const RED_SUBTLE_2 = 'rgba(204, 0, 0, 0.20)';
 
 // Status
 export const SUCCESS = '#2A7A4B';
+export const SUCCESS_SUBTLE = 'rgba(42, 122, 75, 0.15)';
 export const WARNING = '#8A6A00';
+export const WARNING_SUBTLE = 'rgba(138, 106, 0, 0.15)';
+
+// Gradient Colors (for premium effects)
+export const GRADIENTS = {
+  gold: ['#C9A84C', '#A07830', '#C9A84C'],
+  goldSubtle: ['rgba(201, 168, 76, 0.15)', 'rgba(201, 168, 76, 0.05)'],
+  red: ['#CC0000', '#990000', '#CC0000'],
+  surface: ['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.02)'],
+  card: ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.01)'],
+};
+
+// Shadow Effects (for depth)
+export const SHADOWS = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  goldGlow: {
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+};
 
 // Theme Configuration
 export const Colors = {

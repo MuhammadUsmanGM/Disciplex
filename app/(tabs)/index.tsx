@@ -9,6 +9,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { MotiView } from 'moti';
 
 import {
     BASE,
@@ -24,6 +25,8 @@ import {
     getScoreColor,
     getScoreLabel,
 } from '@/constants/theme';
+import { StatusIcons, ActionIcons, FeatureIcons } from '@/src/utils/icons';
+import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
 export default function HomeScreen() {
@@ -77,35 +80,62 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.dateText}>{todayDate}</Text>
-        </View>
+        <MotiView
+          from={SlideInFromTop.from}
+          animate={SlideInFromTop.animate}
+          transition={SlideInFromTop.transition}
+        >
+          <View style={styles.header}>
+            <Text style={styles.dateText}>{todayDate}</Text>
+          </View>
+        </MotiView>
 
         {/* Score Block */}
-        <View style={styles.scoreBlock}>
-          <Text style={[styles.scoreNumber, { color: scoreColor }]}>
-            {habits.length === 0 ? '—' : Math.round(score)}
-          </Text>
-          <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
+        <MotiView
+          from={ScorePop.from}
+          animate={ScorePop.animate}
+          transition={ScorePop.transition}
+        >
+          <View style={styles.scoreBlock}>
+            <Text style={[styles.scoreNumber, { color: scoreColor }]}>
+              {habits.length === 0 ? '—' : Math.round(score)}
+            </Text>
+            <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
 
-          {/* Identity Debt */}
-          {hasDebt && (
-            <View style={styles.debtRow}>
-              <View style={styles.debtDot} />
-              <Text style={styles.debtText}>
-                Identity Debt: {Math.round(identityDebt)} pts
-              </Text>
-            </View>
-          )}
-        </View>
+            {/* Identity Debt */}
+            {hasDebt && (
+              <MotiView
+                from={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', damping: 15, delay: 200 }}
+              >
+                <View style={styles.debtRow}>
+                  <View style={styles.debtDot} />
+                  <Text style={styles.debtText}>
+                    Identity Debt: {Math.round(identityDebt)} pts
+                  </Text>
+                </View>
+              </MotiView>
+            )}
+          </View>
+        </MotiView>
 
         {/* Identity Claim */}
-        {identityClaim ? (
-          <View style={styles.claimBlock}>
-            <Text style={styles.claimLabel}>Identity Claim</Text>
-            <Text style={styles.claimText}>{identityClaim}</Text>
-          </View>
-        ) : null}
+        {identityClaim && (
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'spring', damping: 20, delay: 100 }}
+          >
+            <View style={styles.claimBlock}>
+              <View style={styles.claimHeader}>
+                <FeatureIcons.Target size={16} color={GOLD} />
+                <Text style={styles.claimLabel}>Identity Claim</Text>
+              </View>
+              <Text style={styles.claimText}>{identityClaim}</Text>
+            </View>
+          </MotiView>
+        )}
 
         {/* Divider */}
         <View style={styles.divider} />
@@ -121,45 +151,68 @@ export default function HomeScreen() {
               No habits found. Complete onboarding to set your non-negotiables.
             </Text>
           ) : (
-            habitsWithStatus.map((habit) => (
-              <Pressable
+            habitsWithStatus.map((habit, index) => (
+              <MotiView
                 key={habit.id}
-                style={[styles.habitRow, habit.completedToday && styles.habitRowCompleted]}
-                onPress={() => toggleHabit(habit.id)}
-                android_ripple={{ color: GOLD_SUBTLE }}
+                from={createStaggerAnimation(index, 50).from}
+                animate={createStaggerAnimation(index, 50).animate}
+                transition={createStaggerAnimation(index, 50).transition}
               >
-                {/* Checkbox */}
-                <View
-                  style={[
-                    styles.checkbox,
-                    habit.completedToday && styles.checkboxChecked,
-                  ]}
+                <Pressable
+                  style={[styles.habitRow, habit.completedToday && styles.habitRowCompleted]}
+                  onPress={() => toggleHabit(habit.id)}
+                  android_ripple={{ color: GOLD_SUBTLE }}
                 >
-                  {habit.completedToday && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-
-                {/* Habit name */}
-                <View style={styles.habitTextBlock}>
-                  <Text
-                    style={[
-                      styles.habitName,
-                      habit.completedToday && styles.habitNameCompleted,
-                    ]}
+                  {/* Checkbox with animation */}
+                  <MotiView
+                    from={{ scale: 0.8, rotate: '-10deg' }}
+                    animate={{
+                      scale: habit.completedToday ? 1 : 0.9,
+                      rotate: '0deg',
+                    }}
+                    transition={{ type: 'spring', damping: 15, stiffness: 200 }}
                   >
-                    {habit.name}
-                  </Text>
-                  {habit.lateToday && (
-                    <Text style={styles.lateTag}>Late logged — weight reduced</Text>
-                  )}
-                </View>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        habit.completedToday && styles.checkboxChecked,
+                      ]}
+                    >
+                      {habit.completedToday && (
+                        <MotiView
+                          from={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', damping: 12, stiffness: 300 }}
+                        >
+                          <ActionIcons.Check size={14} color="#0A0A0A" />
+                        </MotiView>
+                      )}
+                    </View>
+                  </MotiView>
 
-                {/* Non-negotiable marker */}
-                {habit.is_non_negotiable && (
-                  <View style={styles.nnTag}>
-                    <Text style={styles.nnTagText}>NN</Text>
+                  {/* Habit name */}
+                  <View style={styles.habitTextBlock}>
+                    <Text
+                      style={[
+                        styles.habitName,
+                        habit.completedToday && styles.habitNameCompleted,
+                      ]}
+                    >
+                      {habit.name}
+                    </Text>
+                    {habit.lateToday && (
+                      <Text style={styles.lateTag}>Late logged — weight reduced</Text>
+                    )}
                   </View>
-                )}
-              </Pressable>
+
+                  {/* Non-negotiable marker */}
+                  {habit.is_non_negotiable && (
+                    <View style={styles.nnTag}>
+                      <Text style={styles.nnTagText}>NN</Text>
+                    </View>
+                  )}
+                </Pressable>
+              </MotiView>
             ))
           )}
         </View>
@@ -254,13 +307,18 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
   },
+  claimHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
   claimLabel: {
     color: GOLD,
     fontSize: 10,
     fontWeight: '600',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    marginBottom: 6,
     fontFamily: 'ui-monospace',
   },
   claimText: {
