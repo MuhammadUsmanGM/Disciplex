@@ -1,9 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
+import { MotiView } from 'moti';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors, GOLD } from '@/constants/theme';
+import { Colors, GOLD, SURFACE, BORDER } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { NavIcons } from '@/src/utils/icons';
 
@@ -19,28 +20,43 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: isDark ? '#111111' : '#FFFFFF',
-          borderTopColor: isDark ? '#2A2A2A' : '#E0E0E0',
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 8,
+          backgroundColor: isDark ? SURFACE : '#FFFFFF',
+          borderTopColor: 'transparent',
+          borderTopWidth: 0,
+          borderBottomWidth: 0,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 12,
+          paddingHorizontal: 16,
+          marginHorizontal: 16,
+          marginBottom: Platform.OS === 'ios' ? 15 : 12,
+          borderRadius: 20,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 12,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 6,
           fontFamily: 'ui-monospace',
           letterSpacing: 0.3,
         },
         tabBarItemStyle: {
           paddingVertical: 4,
         },
+        tabBarBackground: () => (
+          <View style={[
+            styles.tabBarBackground,
+            { backgroundColor: isDark ? SURFACE : '#FFFFFF' }
+          ]} />
+        ),
       }}
     >
       <Tabs.Screen
@@ -94,3 +110,11 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarBackground: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+});
