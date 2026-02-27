@@ -40,3 +40,10 @@ export interface ReckoningSummary {
   most_missed: string | null;
   debt: number;
 }
+
+export interface ReckoningResult {
+  verdict: string;
+  directive: string;
+  bottleneck: string;
+  raw_response: string;
+}
