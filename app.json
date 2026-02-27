@@ -51,13 +51,6 @@
           "color": "#C9A84C",
           "sounds": []
         }
-      ],
-      [
-        "react-native-purchases",
-        {
-          "androidApiKey": "${REVENUECAT_ANDROID_API_KEY}",
-          "iosApiKey": "${REVENUECAT_IOS_API_KEY}"
-        }
       ]
     ],
     "experiments": {
