@@ -19,6 +19,7 @@ import {
     TEXT_SECONDARY,
     getScoreColor,
 } from '@/constants/theme';
+import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
 import { detectBottleneck } from '@/src/lib/scoring';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -126,8 +127,13 @@ export default function InsightsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerLabel}>Insights</Text>
-          <Text style={styles.headerSub}>Last 7 days</Text>
+          <View>
+            <Text style={styles.headerLabel}>Insights</Text>
+            <Text style={styles.headerSub}>Last 7 days</Text>
+          </View>
+          {hasData && (
+             <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} />
+          )}
         </View>
 
         {/* Stats Row */}
@@ -339,6 +345,9 @@ const styles = StyleSheet.create({
   },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 24,
   },
   headerLabel: {
