@@ -1,6 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     SafeAreaView,
     ScrollView,
@@ -22,13 +21,12 @@ import {
     TEXT_SECONDARY,
     getScoreColor,
 } from '@/constants/theme';
+import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
 interface OnboardingData {
   identity_claim: string;
   refuse_to_be: string;
-  non_negotiables: [string, string, string];
-  tone_preference: 'analytical' | 'brutal';
 }
 
 export default function IdentityScreen() {
@@ -37,14 +35,22 @@ export default function IdentityScreen() {
 
   const { habits, getHabitsWithStatus, getLast7DayScores } = useHabitStore();
 
-  // Load onboarding data
-  useEffect(() => {
-    AsyncStorage.getItem('onboarding_data').then((raw) => {
-      if (raw) {
-        setOnboardingData(JSON.parse(raw));
-      }
-    });
-  }, []);
+  // Load onboarding data from Supabase
+  useFocusEffect(
+    useCallback(() => {
+      const fetchIdentity = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+           const { data } = await supabase.from('users').select('identity_claim,refuse_to_be').eq('id', user.id).single();
+           if (data) {
+              setOnboardingData(data as OnboardingData);
+           }
+        }
+      };
+      
+      fetchIdentity();
+    }, [])
+  );
 
   // Calculate alignment percentage
   useFocusEffect(
@@ -138,8 +144,8 @@ export default function IdentityScreen() {
                 These 3 behaviors define your identity. Miss one — you pay for it.
               </Text>
 
-              {onboardingData.non_negotiables.map((habit, i) => {
-                const habitData = habitsWithStatus[i];
+              {habits.map((habit, i) => {
+                const habitData = habitsWithStatus.find((h) => h.id === habit.id);
                 const isCompleted = habitData?.completedToday ?? false;
 
                 return (
@@ -151,7 +157,7 @@ export default function IdentityScreen() {
                       ]}
                     />
                     <View style={styles.habitInfo}>
-                      <Text style={styles.habitName}>{habit}</Text>
+                      <Text style={styles.habitName}>{habit.name}</Text>
                       <Text
                         style={[
                           styles.habitStatus,

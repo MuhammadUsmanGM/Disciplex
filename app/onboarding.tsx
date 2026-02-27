@@ -1,3 +1,4 @@
+import { supabase } from '@/src/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -66,10 +67,46 @@ export default function OnboardingScreen() {
   const goNext = () => animateTransition(() => setStep((s) => s + 1));
   const goBack = () => animateTransition(() => setStep((s) => s - 1));
 
+  const [saving, setSaving] = useState(false);
+
   const handleComplete = async () => {
-    await AsyncStorage.setItem('onboarding_complete', 'true');
-    await AsyncStorage.setItem('onboarding_data', JSON.stringify(data));
-    router.replace('/(tabs)' as never);
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      // 1. Save identity claims to users table
+      const { error: userError } = await supabase.from('users').upsert({
+        id: user.id,
+        identity_claim: data.identity_claim,
+        refuse_to_be: data.refuse_to_be,
+        tone_preference: data.tone_preference,
+      });
+
+      if (userError) throw userError;
+
+      // 2. Insert non-negotiables to habits table
+      const habitsToInsert = data.non_negotiables.map((name) => ({
+        user_id: user.id,
+        name,
+        is_non_negotiable: true,
+        weight: 1,
+      }));
+
+      const { error: habitsError } = await supabase.from('habits').insert(habitsToInsert);
+
+      if (habitsError) throw habitsError;
+
+      // 3. Mark locally as complete
+      await AsyncStorage.setItem('onboarding_complete', 'true');
+      await AsyncStorage.setItem('onboarding_data', JSON.stringify(data));
+      router.replace('/(tabs)' as never);
+    } catch (error) {
+      console.error('Error during onboarding save:', error);
+      alert('Failed to save your identity. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateNonNegotiable = (index: number, value: string) => {
@@ -142,7 +179,7 @@ export default function OnboardingScreen() {
             onNext={goNext}
           />
         )}
-        {step === 5 && <CompletionStep data={data} onComplete={handleComplete} />}
+        {step === 5 && <CompletionStep data={data} onComplete={handleComplete} saving={saving} />}
       </Animated.View>
     </View>
   );
@@ -361,9 +398,11 @@ function ToneStep({
 function CompletionStep({
   data,
   onComplete,
+  saving,
 }: {
   data: OnboardingData;
   onComplete: () => void;
+  saving?: boolean;
 }) {
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
@@ -401,8 +440,12 @@ function CompletionStep({
         </Text>
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={onComplete}>
-        <Text style={styles.primaryButtonText}>Enter Disciplex</Text>
+      <Pressable
+        style={[styles.primaryButton, saving && styles.primaryButtonDisabled]}
+        onPress={onComplete}
+        disabled={saving}
+      >
+        <Text style={styles.primaryButtonText}>{saving ? 'Initializing...' : 'Enter Disciplex'}</Text>
       </Pressable>
     </ScrollView>
   );

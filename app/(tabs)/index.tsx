@@ -33,26 +33,28 @@ export default function HomeScreen() {
   const {
     habits,
     identityDebt,
-    initHabitsFromOnboarding,
+    loadDataFromCloud,
     toggleHabit,
     getHabitsWithStatus,
     getTodayScore,
+    loading,
   } = useHabitStore();
 
-  // Load onboarding data and init habits if needed
+  // Load onboarding data and load habits from cloud
   useEffect(() => {
     AsyncStorage.getItem('onboarding_data').then((raw) => {
       if (!raw) return;
       const data = JSON.parse(raw);
       setIdentityClaim(data.identity_claim ?? null);
-      initHabitsFromOnboarding(data.non_negotiables ?? []);
     });
+
+    loadDataFromCloud();
 
     const now = new Date();
     setTodayDate(
       now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
     );
-  }, [initHabitsFromOnboarding]);
+  }, [loadDataFromCloud]);
 
   // Recalculate when screen gains focus
   useFocusEffect(
@@ -112,7 +114,9 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Today&apos;s Non-Negotiables</Text>
 
-          {habits.length === 0 ? (
+          {loading ? (
+            <Text style={styles.emptyText}>Loading protocol...</Text>
+          ) : habits.length === 0 ? (
             <Text style={styles.emptyText}>
               No habits found. Complete onboarding to set your non-negotiables.
             </Text>

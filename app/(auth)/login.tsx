@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -28,6 +30,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -58,8 +61,17 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-          <Text style={styles.header}>Welcome Back</Text>
-          <Text style={styles.subtext}>Enter your credentials to continue your execution.</Text>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+
+          <Text style={styles.header}>Access Protocol</Text>
+          <Text style={styles.subtext}>Provide authorized credentials to resume performance tracking.</Text>
 
           {errorMsg && (
             <View style={styles.errorContainer}>
@@ -83,15 +95,28 @@ export default function LoginScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••"
-              placeholderTextColor={TEXT_MUTED}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="current-password"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor={TEXT_MUTED}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoComplete="current-password"
+              />
+              <Pressable
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={TEXT_MUTED}
+                />
+              </Pressable>
+            </View>
           </View>
 
           <Pressable
@@ -99,11 +124,11 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Sign In'}</Text>
+            <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Authenticate'}</Text>
           </Pressable>
 
           <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
-            <Text style={styles.linkText}>Don&apos;t have an account? Create one</Text>
+            <Text style={styles.linkText}>No identity profile? Establish one here.</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -119,6 +144,14 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     flexGrow: 1,
     justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logo: {
+    width: 240,
+    height: 80,
   },
   header: {
     color: TEXT_PRIMARY,
@@ -166,6 +199,23 @@ const styles = StyleSheet.create({
     padding: 16,
     color: TEXT_PRIMARY,
     fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 16,
+    color: TEXT_PRIMARY,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 16,
   },
   primaryButton: {
     backgroundColor: GOLD,

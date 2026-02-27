@@ -1,7 +1,7 @@
 /**
  * Habit Store — Zustand
  * Manages habits, completions, scores, and identity debt.
- * Uses AsyncStorage for local persistence (no backend yet).
+ * Uses AsyncStorage for local persistence and syncs with Supabase.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { calculateDailyScore, updateDebt } from '@/src/lib/scoring';
+import { supabase } from '@/src/lib/supabase';
 import { Completion, Habit } from '@/src/types/habit';
 
 const STORAGE_KEY = 'disciplex_habit_store';
@@ -22,7 +23,6 @@ function nowISO(): string {
 }
 
 function isLate(loggedAt: string): boolean {
-  // Late = logged after 20:00 (8pm) on the same day
   const logged = new Date(loggedAt);
   return logged.getHours() >= 20;
 }
@@ -36,19 +36,20 @@ interface ScoreHistory {
 
 interface HabitState {
   habits: Habit[];
-  completions: Completion[]; // all-time completions
+  completions: Completion[];
   scoreHistory: ScoreHistory[];
   identityDebt: number;
   consecutiveHighDays: number;
+  loading: boolean;
 
   // Actions
-  initHabitsFromOnboarding: (nonNegotiables: string[]) => void;
-  toggleHabit: (habitId: string) => void;
+  loadDataFromCloud: () => Promise<void>;
+  toggleHabit: (habitId: string) => Promise<void>;
   getTodayCompletions: () => Completion[];
   getTodayScore: () => number;
   getHabitsWithStatus: () => (Habit & { completedToday: boolean; lateToday: boolean })[];
   getLast7DayScores: () => number[];
-  recalculateAndSaveScore: () => void;
+  recalculateAndSaveScore: () => Promise<void>;
 }
 
 export const useHabitStore = create<HabitState>()(
@@ -59,24 +60,66 @@ export const useHabitStore = create<HabitState>()(
       scoreHistory: [],
       identityDebt: 0,
       consecutiveHighDays: 0,
+      loading: false,
 
-      initHabitsFromOnboarding: (nonNegotiables: string[]) => {
-        const existing = get().habits;
-        if (existing.length > 0) return; // already initialized
+      loadDataFromCloud: async () => {
+        set({ loading: true });
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            set({ loading: false });
+            return;
+          }
 
-        const habits: Habit[] = nonNegotiables.map((name, i) => ({
-          id: `habit_${i}_${Date.now()}`,
-          user_id: 'local',
-          name,
-          is_non_negotiable: true,
-          weight: 1,
-          created_at: nowISO(),
-        }));
+          // Fetch all habits
+          const { data: habits } = await supabase
+            .from('habits')
+            .select('*')
+            .eq('user_id', user.id);
 
-        set({ habits });
+          if (!habits || habits.length === 0) {
+             set({ loading: false });
+             return;
+          }
+
+          const habitIds = habits.map((h) => h.id);
+
+          // Fetch all completions
+          const { data: completions } = await supabase
+            .from('completions')
+            .select('*')
+            .in('habit_id', habitIds);
+
+          // Fetch all scores
+          const { data: scores } = await supabase
+            .from('scores')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: true });
+
+          const scoreHistory: ScoreHistory[] = (scores || []).map((s) => ({
+             date: s.date,
+             score: s.alignment_score,
+             adjustedScore: s.adjusted_score,
+             identityDebt: s.identity_debt,
+          }));
+
+          const latestDebt = scoreHistory.length > 0 ? scoreHistory[scoreHistory.length - 1].identityDebt : 0;
+
+          set({
+            habits: habits as Habit[],
+            completions: (completions as Completion[]) || [],
+            scoreHistory,
+            identityDebt: latestDebt,
+            loading: false,
+          });
+        } catch (error) {
+          console.error('Failed to load cloud data:', error);
+          set({ loading: false });
+        }
       },
 
-      toggleHabit: (habitId: string) => {
+      toggleHabit: async (habitId: string) => {
         const today = todayISO();
         const existing = get().completions.find(
           (c) => c.habit_id === habitId && c.date === today,
@@ -85,26 +128,35 @@ export const useHabitStore = create<HabitState>()(
         let newCompletions: Completion[];
 
         if (existing) {
-          // Toggle off
+          // Toggle off locally
           newCompletions = get().completions.filter(
             (c) => !(c.habit_id === habitId && c.date === today),
           );
+          set({ completions: newCompletions });
+          
+          // Toggle off on Cloud
+          await supabase.from('completions').delete().eq('id', existing.id);
         } else {
-          // Toggle on
+          // Toggle on locally
           const loggedAt = nowISO();
-          const completion: Completion = {
-            id: `comp_${habitId}_${today}`,
+          const completion = {
             habit_id: habitId,
             date: today,
             completed: true,
             logged_at: loggedAt,
             late_logged: isLate(loggedAt),
           };
-          newCompletions = [...get().completions, completion];
+          
+          // Toggle on on Cloud
+          const { data } = await supabase.from('completions').insert(completion).select().single();
+          
+          if (data) {
+             newCompletions = [...get().completions, data as Completion];
+             set({ completions: newCompletions });
+          }
         }
 
-        set({ completions: newCompletions });
-        get().recalculateAndSaveScore();
+        await get().recalculateAndSaveScore();
       },
 
       getTodayCompletions: () => {
@@ -138,7 +190,7 @@ export const useHabitStore = create<HabitState>()(
         return entry?.score ?? 0;
       },
 
-      recalculateAndSaveScore: () => {
+      recalculateAndSaveScore: async () => {
         const { habits, completions, scoreHistory, identityDebt, consecutiveHighDays } = get();
         const today = todayISO();
         const todayCompletions = completions.filter((c) => c.date === today && c.completed);
@@ -162,8 +214,6 @@ export const useHabitStore = create<HabitState>()(
         const newConsecutiveHigh =
           result.adjustedScore > 85 ? consecutiveHighDays + 1 : 0;
 
-        // Upsert today's score in history
-        const existingIdx = scoreHistory.findIndex((s) => s.date === today);
         const entry: ScoreHistory = {
           date: today,
           score: result.finalAlignment,
@@ -171,6 +221,7 @@ export const useHabitStore = create<HabitState>()(
           identityDebt: newDebt,
         };
 
+        const existingIdx = scoreHistory.findIndex((s) => s.date === today);
         const newHistory =
           existingIdx >= 0
             ? scoreHistory.map((s, i) => (i === existingIdx ? entry : s))
@@ -181,6 +232,20 @@ export const useHabitStore = create<HabitState>()(
           identityDebt: newDebt,
           consecutiveHighDays: newConsecutiveHigh,
         });
+
+        // Sync Score to Cloud
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('scores').upsert({
+            user_id: user.id,
+            date: today,
+            daily_score: result.rawScore,
+            adjusted_score: result.adjustedScore,
+            alignment_score: result.finalAlignment,
+            identity_debt: newDebt,
+            volatility: 0, // Simplified for now
+          }, { onConflict: 'user_id,date' });
+        }
       },
     }),
     {
