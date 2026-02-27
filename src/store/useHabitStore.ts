@@ -8,8 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { Completion, Habit } from '@/src/types/habit';
 import { calculateDailyScore, updateDebt } from '@/src/lib/scoring';
+import { Completion, Habit } from '@/src/types/habit';
 
 const STORAGE_KEY = 'disciplex_habit_store';
 
@@ -46,7 +46,7 @@ interface HabitState {
   toggleHabit: (habitId: string) => void;
   getTodayCompletions: () => Completion[];
   getTodayScore: () => number;
-  getHabitsWithStatus: () => Array<Habit & { completedToday: boolean; lateToday: boolean }>;
+  getHabitsWithStatus: () => (Habit & { completedToday: boolean; lateToday: boolean })[];
   getLast7DayScores: () => number[];
   recalculateAndSaveScore: () => void;
 }

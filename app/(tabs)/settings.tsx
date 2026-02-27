@@ -1,19 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   BASE,
   BORDER,
   GOLD,
-  GOLD_SUBTLE,
   RED,
+  RED_SUBTLE,
   SURFACE,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
 } from '@/constants/theme';
 
-type TonePreference = 'analytical' | 'brutal';
+
 
 export default function SettingsScreen() {
   const appVersion = '1.0.0';

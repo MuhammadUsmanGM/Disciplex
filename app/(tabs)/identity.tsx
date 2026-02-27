@@ -2,25 +2,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  GOLD_SUBTLE,
-  RED,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  getScoreColor,
+    BASE,
+    BORDER,
+    GOLD,
+    GOLD_SUBTLE,
+    RED,
+    SURFACE,
+    SURFACE_2,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    getScoreColor,
 } from '@/constants/theme';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -56,7 +56,7 @@ export default function IdentityScreen() {
       } else {
         setAlignmentPercentage(0);
       }
-    }, []),
+    }, [getLast7DayScores]),
   );
 
   const habitsWithStatus = getHabitsWithStatus();
@@ -168,7 +168,7 @@ export default function IdentityScreen() {
 
             {/* Today's Progress */}
             <View style={styles.card}>
-              <Text style={styles.cardLabel}>Today's Execution</Text>
+              <Text style={styles.cardLabel}>Today&apos;s Execution</Text>
               <View style={styles.progressRow}>
                 <Text style={styles.progressText}>
                   {completedCount} of {habits.length} completed

@@ -32,24 +32,7 @@ function rawScore(habits: Habit[], completions: Completion[]): number {
 
 // ─── Step 2: Non-Negotiable Weighted Score ────────────────────────────────────
 
-function weightedScore(habits: Habit[], completions: Completion[]): number {
-  if (habits.length === 0) return 0;
-
-  // Non-negotiables carry double weight
-  const effectiveHabits = habits.map((h) => ({
-    ...h,
-    effectiveWeight: h.is_non_negotiable ? h.weight * 2 : h.weight,
-  }));
-
-  const totalWeight = effectiveHabits.reduce((sum, h) => sum + h.effectiveWeight, 0);
-  if (totalWeight === 0) return 0;
-
-  const completedWeight = effectiveHabits
-    .filter((h) => isCompleted(h.id, completions))
-    .reduce((sum, h) => sum + h.effectiveWeight, 0);
-
-  return (completedWeight / totalWeight) * 100;
-}
+// (removed unused weightedScore function)
 
 // ─── Step 3: Late Log Penalty ────────────────────────────────────────────────
 // Applied during completion recording — late_logged flag reduces effective weight.
@@ -142,8 +125,8 @@ export interface BottleneckResult {
 
 export function detectBottleneck(
   habits: Habit[],
-  weeklyCompletions: Array<{ date: string; completions: Completion[] }>,
-  weeklyScores: Array<{ date: string; score: number }>,
+  weeklyCompletions: { date: string; completions: Completion[] }[],
+  weeklyScores: { date: string; score: number }[],
 ): BottleneckResult | null {
   let result: BottleneckResult | null = null;
 

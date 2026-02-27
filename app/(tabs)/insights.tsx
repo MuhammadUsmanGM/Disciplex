@@ -1,26 +1,23 @@
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  GOLD_SUBTLE,
-  RED,
-  RED_SUBTLE,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  getScoreColor,
+    BASE,
+    BORDER,
+    GOLD,
+    RED,
+    SURFACE,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    getScoreColor,
 } from '@/constants/theme';
 import { detectBottleneck } from '@/src/lib/scoring';
 import { useHabitStore } from '@/src/store/useHabitStore';
@@ -109,7 +106,7 @@ export default function InsightsScreen() {
   }, [habits, completions, scoreHistory, last7Dates]);
 
   // Current score + volatility
-  const currentScore = scoreHistory.length > 0 ? scoreHistory[scoreHistory.length - 1].score : null;
+
   const volatility = useMemo(() => {
     const scores = scoreHistory.slice(-7).map((s) => s.score);
     if (scores.length < 2) return null;

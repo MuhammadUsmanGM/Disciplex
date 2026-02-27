@@ -1,26 +1,26 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 import {
-    BASE,
-    BORDER,
-    GOLD,
-    RED,
-    SURFACE,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
+  BASE,
+  BORDER,
+  GOLD,
+  RED,
+  SURFACE,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
 } from '@/constants/theme';
 import { supabase } from '@/src/lib/supabase';
 
@@ -103,7 +103,7 @@ export default function LoginScreen() {
           </Pressable>
 
           <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
-            <Text style={styles.linkText}>Don't have an account? Create one</Text>
+            <Text style={styles.linkText}>Don&apos;t have an account? Create one</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

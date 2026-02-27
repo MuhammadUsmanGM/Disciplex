@@ -2,28 +2,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  GOLD_SUBTLE,
-  RED,
-  RED_SUBTLE,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  getScoreColor,
-  getScoreLabel,
+    BASE,
+    BORDER,
+    GOLD,
+    GOLD_SUBTLE,
+    RED,
+    SURFACE,
+    SURFACE_2,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    getScoreColor,
+    getScoreLabel,
 } from '@/constants/theme';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -53,7 +52,7 @@ export default function HomeScreen() {
     setTodayDate(
       now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
     );
-  }, []);
+  }, [initHabitsFromOnboarding]);
 
   // Recalculate when screen gains focus
   useFocusEffect(
@@ -111,7 +110,7 @@ export default function HomeScreen() {
 
         {/* Habit Log */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Today's Non-Negotiables</Text>
+          <Text style={styles.sectionLabel}>Today&apos;s Non-Negotiables</Text>
 
           {habits.length === 0 ? (
             <Text style={styles.emptyText}>
