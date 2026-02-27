@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { BASE } from '@/constants/theme';
+import { configureNotifications } from '@/src/lib/notifications';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function RootLayout() {
@@ -16,6 +17,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     initialize();
+    configureNotifications(); // Configure notification channels on app start
     AsyncStorage.getItem('onboarding_complete').then((val) => {
       setOnboardingComplete(val === 'true');
       setOnboardingChecked(true);

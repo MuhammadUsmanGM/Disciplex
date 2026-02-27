@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import {
   BASE,
@@ -8,28 +9,115 @@ import {
   RED,
   RED_SUBTLE,
   SURFACE,
+  SURFACE_2,
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
 } from '@/constants/theme';
+import { useNotifications } from '@/src/hooks/useNotifications';
+import { supabase } from '@/src/lib/supabase';
+import { useHabitStore } from '@/src/store/useHabitStore';
 
 
 
 export default function SettingsScreen() {
   const appVersion = '1.0.0';
+  const { scoreHistory } = useHabitStore();
+  const {
+    permissionGranted,
+    loading: notifLoading,
+    milestone7DayReached,
+    requestPermission,
+    scheduleReckoning,
+    cancelReckoning,
+    checkAndScheduleMilestone,
+  } = useNotifications();
+
+  const [reckoningTime, setReckoningTime] = useState<string>('20:00');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Load user's reckoning time preference
+  useEffect(() => {
+    const loadReckoningTime = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('users')
+            .select('reckoning_time')
+            .eq('id', user.id)
+            .single();
+          if (data?.reckoning_time) {
+            setReckoningTime(data.reckoning_time);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load reckoning time:', error);
+      }
+    };
+    loadReckoningTime();
+  }, []);
+
+  // Check and schedule milestone when score history changes
+  useEffect(() => {
+    if (scoreHistory.length > 0) {
+      checkAndScheduleMilestone(scoreHistory);
+    }
+  }, [scoreHistory, checkAndScheduleMilestone]);
+
+  const handleRequestPermission = async () => {
+    const granted = await requestPermission();
+    if (granted) {
+      // Schedule reckoning with current time
+      const todayScore = scoreHistory.length > 0 ? scoreHistory[scoreHistory.length - 1].score : undefined;
+      await scheduleReckoning(reckoningTime, todayScore);
+    }
+  };
+
+  const handleSaveReckoningTime = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('users')
+          .update({ reckoning_time: reckoningTime })
+          .eq('id', user.id);
+
+        // Reschedule notification with new time
+        if (permissionGranted) {
+          const todayScore = scoreHistory.length > 0 ? scoreHistory[scoreHistory.length - 1].score : undefined;
+          await scheduleReckoning(reckoningTime, todayScore);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save reckoning time:', error);
+      alert('Failed to save preference');
+    } finally {
+      setIsSaving(false);
+      setShowTimePicker(false);
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    if (permissionGranted) {
+      await cancelReckoning();
+    } else {
+      await handleRequestPermission();
+    }
+  };
 
   const handleExportData = async () => {
     try {
       const onboardingData = await AsyncStorage.getItem('onboarding_data');
       const allKeys = await AsyncStorage.getAllKeys();
-      
-      // For now, just show a simple alert - will be replaced with actual export
+
       console.log('Exporting data...', {
         onboarding: onboardingData,
         totalKeys: allKeys.length,
       });
-      
-      // TODO: Implement actual file export
+
       alert('Data export coming in next update. For now, check console for debug output.');
     } catch (error) {
       console.error('Export error:', error);
@@ -52,7 +140,7 @@ export default function SettingsScreen() {
     const confirmed = confirm(
       'This will permanently delete all your habits, completions, and scores. This cannot be undone.',
     );
-    
+
     if (confirmed) {
       try {
         await AsyncStorage.multiRemove([
@@ -66,6 +154,13 @@ export default function SettingsScreen() {
         alert('Failed to delete data');
       }
     }
+  };
+
+  const formatTimeDisplay = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
   return (
@@ -87,31 +182,136 @@ export default function SettingsScreen() {
           <Text style={styles.tagline}>The AI Discipline Operating System</Text>
         </View>
 
+        {/* Notifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Notifications</Text>
+
+          <View style={styles.card}>
+            {/* Permission Toggle */}
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Weekly Reckoning</Text>
+                <Text style={styles.settingHint}>
+                  {permissionGranted ? 'Every Sunday at your chosen time' : 'Enable for Sunday verdicts'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.toggleButton, permissionGranted ? styles.toggleOn : styles.toggleOff]}
+                onPress={handleToggleNotifications}
+                disabled={notifLoading}
+              >
+                <Text style={[styles.toggleText, permissionGranted ? styles.toggleTextOn : styles.toggleTextOff]}>
+                  {permissionGranted ? 'On' : 'Off'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {permissionGranted && (
+              <>
+                <View style={styles.separator} />
+                
+                {/* Reckoning Time Picker */}
+                <TouchableOpacity
+                  style={styles.pressableRow}
+                  onPress={() => setShowTimePicker(!showTimePicker)}
+                >
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Reckoning Delivery</Text>
+                    <Text style={styles.settingHint}>Sunday at {formatTimeDisplay(reckoningTime)}</Text>
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+
+                {/* Time Picker UI */}
+                {showTimePicker && (
+                  <View style={styles.timePickerContainer}>
+                    <View style={styles.timePicker}>
+                      <Text style={styles.timePickerLabel}>Select Time</Text>
+                      <View style={styles.timeInputRow}>
+                        <TouchableOpacity
+                          style={styles.timeButton}
+                          onPress={() => adjustTime(-1)}
+                        >
+                          <Text style={styles.timeButtonText}>−</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.timeDisplay}>{formatTimeDisplay(reckoningTime)}</Text>
+                        <TouchableOpacity
+                          style={styles.timeButton}
+                          onPress={() => adjustTime(1)}
+                        >
+                          <Text style={styles.timeButtonText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.timePickerActions}>
+                        <TouchableOpacity
+                          style={styles.timeCancelButton}
+                          onPress={() => setShowTimePicker(false)}
+                        >
+                          <Text style={styles.timeCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.timeSaveButton}
+                          onPress={handleSaveReckoningTime}
+                          disabled={isSaving}
+                        >
+                          <Text style={styles.timeSaveText}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Milestone Status */}
+                <View style={styles.separator} />
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>7-Day Milestone</Text>
+                    <Text style={styles.settingHint}>
+                      {milestone7DayReached ? 'Reached — notification scheduled' : 'Keep executing'}
+                    </Text>
+                  </View>
+                  {milestone7DayReached && (
+                    <View style={styles.milestoneBadge}>
+                      <Text style={styles.milestoneText}>✓</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
+
+            {!permissionGranted && (
+              <View style={styles.separator} />
+            )}
+            
+            {!permissionGranted && (
+              <TouchableOpacity style={styles.enableButton} onPress={handleRequestPermission}>
+                <Text style={styles.enableButtonText}>Enable Notifications</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         {/* Preferences */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Preferences</Text>
-          
+
           <View style={styles.card}>
-            <SettingRow
-              label="Reckoning Delivery"
-              value="Sunday, 8:00 PM"
-              disabled
-              hint="Coming in next update"
-            />
-            <View style={styles.separator} />
-            <SettingRow
-              label="AI Tone"
-              value="Analytical"
-              disabled
-              hint="Configure in onboarding"
-            />
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>AI Tone</Text>
+                <Text style={styles.settingHint}>Analytical</Text>
+              </View>
+              <Text style={styles.settingValue}>Analytical</Text>
+            </View>
           </View>
         </View>
 
         {/* Data Management */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Data</Text>
-          
+
           <View style={styles.card}>
             <PressableRow onPress={handleExportData}>
               <Text style={styles.rowLabel}>Export My Data</Text>
@@ -133,7 +333,7 @@ export default function SettingsScreen() {
         {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>About</Text>
-          
+
           <View style={styles.card}>
             <PressableRow
               onPress={() => Linking.openURL('https://github.com/MuhammadUsmanGM/Disciplex')}
@@ -163,35 +363,18 @@ export default function SettingsScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+
+  // Helper to adjust time by 1 hour
+  function adjustTime(delta: number) {
+    const [hours, minutes] = reckoningTime.split(':').map(Number);
+    let newHours = hours + delta;
+    if (newHours < 0) newHours = 23;
+    if (newHours >= 24) newHours = 0;
+    setReckoningTime(`${newHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function SettingRow({
-  label,
-  value,
-  disabled,
-  hint,
-}: {
-  label: string;
-  value: string;
-  disabled?: boolean;
-  hint?: string;
-}) {
-  return (
-    <View style={styles.settingRow}>
-      <View style={styles.settingInfo}>
-        <Text style={[styles.settingLabel, disabled && styles.settingLabelDisabled]}>
-          {label}
-        </Text>
-        {hint && <Text style={styles.settingHint}>{hint}</Text>}
-      </View>
-      <Text style={[styles.settingValue, disabled && styles.settingValueDisabled]}>
-        {value}
-      </Text>
-    </View>
-  );
-}
 
 function PressableRow({
   onPress,
@@ -300,9 +483,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  settingLabelDisabled: {
-    opacity: 0.5,
-  },
   settingHint: {
     color: TEXT_MUTED,
     fontSize: 11,
@@ -313,14 +493,54 @@ const styles = StyleSheet.create({
     color: TEXT_SECONDARY,
     fontSize: 14,
   },
-  settingValueDisabled: {
-    opacity: 0.5,
+
+  // Toggle Button
+  toggleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  toggleOn: {
+    backgroundColor: GOLD,
+  },
+  toggleOff: {
+    backgroundColor: SURFACE_2,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
+  },
+  toggleTextOn: {
+    color: '#0A0A0A',
+  },
+  toggleTextOff: {
+    color: TEXT_SECONDARY,
+  },
+
+  // Enable Button
+  enableButton: {
+    backgroundColor: GOLD,
+    margin: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  enableButtonText: {
+    color: '#0A0A0A',
+    fontSize: 15,
+    fontWeight: '700',
   },
 
   // Pressable Row
   pressableRow: {
     paddingVertical: 14,
     paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   pressableRowDanger: {
     backgroundColor: RED_SUBTLE,
@@ -344,6 +564,109 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     fontSize: 11,
     fontFamily: 'ui-monospace',
+  },
+
+  // Chevron
+  chevron: {
+    color: TEXT_SECONDARY,
+    fontSize: 20,
+    fontWeight: '300',
+  },
+
+  // Time Picker
+  timePickerContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: SURFACE_2,
+  },
+  timePicker: {
+    backgroundColor: SURFACE,
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  timePickerLabel: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontFamily: 'ui-monospace',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  timeInputRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+    marginBottom: 16,
+  },
+  timeDisplay: {
+    color: TEXT_PRIMARY,
+    fontSize: 32,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
+    minWidth: 100,
+    textAlign: 'center',
+  },
+  timeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SURFACE_2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  timeButtonText: {
+    color: TEXT_PRIMARY,
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  timePickerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timeCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    backgroundColor: SURFACE_2,
+    alignItems: 'center',
+  },
+  timeCancelText: {
+    color: TEXT_SECONDARY,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  timeSaveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    backgroundColor: GOLD,
+    alignItems: 'center',
+  },
+  timeSaveText: {
+    color: '#0A0A0A',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Milestone Badge
+  milestoneBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: GOLD,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  milestoneText: {
+    color: '#0A0A0A',
+    fontSize: 16,
+    fontWeight: '700',
   },
 
   // Footer
