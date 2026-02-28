@@ -11,6 +11,7 @@ export interface Reckoning {
   bottleneck: string | null;
   verdict: string;
   directive: string;
+  projection: string | null;
   generated_at: string;
 }
 
@@ -45,5 +46,6 @@ export interface ReckoningResult {
   verdict: string;
   directive: string;
   bottleneck: string;
+  projection: string;
   raw_response: string;
 }

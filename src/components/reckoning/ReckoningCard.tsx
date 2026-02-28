@@ -6,7 +6,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { GOLD, RED, SURFACE, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
+import { Fonts, GLASS_BORDER, GLASS_SURFACE, GOLD, RED, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
 import { ReckoningResult } from '@/src/types/reckoning';
 
 interface ReckoningCardProps {
@@ -62,6 +62,11 @@ export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCa
       ) : null}
 
       {/* Directive */}
+      <View style={[styles.section, styles.projectionSection]}>
+        <Text style={styles.sectionLabel}>PROJECTION (365 DAYS)</Text>
+        <Text style={styles.projectionText}>{reckoning.projection}</Text>
+      </View>
+
       <View style={[styles.section, styles.directiveSection]}>
         <Text style={styles.sectionLabel}>DIRECTIVE</Text>
         <Text style={styles.directiveText}>{reckoning.directive}</Text>
@@ -78,12 +83,16 @@ function getScoreColor(score: number): string {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
-    borderRadius: 12,
-    padding: 20,
+    borderColor: GLASS_BORDER,
+    borderRadius: 16,
+    padding: 24,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
   },
   header: {
     flexDirection: 'row',
@@ -136,7 +145,15 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 18,
   },
+  projectionSection: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
   directiveSection: {
+    marginTop: 12,
     marginBottom: 4,
   },
   sectionLabel: {
@@ -159,11 +176,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
-  directiveText: {
-    color: GOLD,
+  projectionText: {
+    color: '#DDD',
     fontSize: 14,
     lineHeight: 22,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontStyle: 'italic',
+    letterSpacing: 0.2,
+  },
+  directiveText: {
+    color: GOLD,
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    fontFamily: Fonts.mono,
   },
 });

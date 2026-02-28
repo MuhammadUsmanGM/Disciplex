@@ -6,8 +6,8 @@
  * Reference: disciplex.md Section 8 - AI Architecture
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ReckoningPayload, ReckoningResult } from '@/src/types/reckoning';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini API
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -31,8 +31,9 @@ RULES:
 - NEVER use generic motivational language
 - NEVER say "great job," "keep it up," "you've got this," or any variant
 - Identify the structural bottleneck, not surface symptoms
+- End with an Identity Projection: who they will be in 365 days based on this week's data
 - End with exactly ONE directive: a single, specific behavioral instruction for next week
-- Maximum 250 words
+- Maximum 300 words
 - Tone: analytical, direct, honest. Not harsh for its own sake. Just accurate.
 - Data is truth. Do not hallucinate observations. Do not infer beyond what the numbers show.
 
@@ -48,6 +49,9 @@ Debt: [debt points]
 
 Verdict:
 [2-4 sentences of direct analysis]
+
+Projection (In 365 Days):
+[One cold, descriptive sentence of their future self if this behavior persists]
 
 Directive:
 [One sentence. One action.]`;
@@ -111,6 +115,7 @@ export async function generateWeeklyReckoning(
       verdict: parsed.verdict,
       directive: parsed.directive,
       bottleneck: parsed.bottleneck,
+      projection: parsed.projection,
       raw_response: verdict,
     };
   } catch (error) {
@@ -127,7 +132,7 @@ export async function generateWeeklyReckoning(
 function parseReckoningVerdict(
   verdict: string,
   payload: ReckoningPayload,
-): { verdict: string; directive: string; bottleneck: string } {
+): { verdict: string; directive: string; bottleneck: string; projection: string } {
   // Extract directive (last sentence after "Directive:" or final line)
   let directive = '';
   const directiveMatch = verdict.match(/Directive:\s*(.+?)(?:\n|$)/i);
@@ -137,6 +142,13 @@ function parseReckoningVerdict(
     // Fallback: take the last sentence
     const sentences = verdict.split('.').filter((s) => s.trim().length > 0);
     directive = sentences[sentences.length - 1].trim() + '.';
+  }
+
+  // Extract projection
+  let projection = '';
+  const projectionMatch = verdict.match(/Projection.*:\s*([\s\S]*?)(?:Directive:|$)/i);
+  if (projectionMatch) {
+    projection = projectionMatch[1].trim();
   }
 
   // Extract bottleneck analysis
@@ -149,9 +161,9 @@ function parseReckoningVerdict(
     bottleneck = `${payload.bottleneck_habit}. ${payload.bottleneck_pattern || ''}`.trim();
   }
 
-  // Extract verdict body (everything between "Verdict:" and "Directive:")
+  // Extract verdict body (everything between "Verdict:" and "Projection:" or "Directive:")
   let verdictBody = '';
-  const verdictMatch = verdict.match(/Verdict:\s*([\s\S]*?)(?:Directive:|$)/i);
+  const verdictMatch = verdict.match(/Verdict:\s*([\s\S]*?)(?:Projection:|Directive:|$)/i);
   if (verdictMatch) {
     verdictBody = verdictMatch[1].trim();
   }
@@ -160,6 +172,7 @@ function parseReckoningVerdict(
     verdict: verdictBody,
     directive,
     bottleneck,
+    projection,
   };
 }
 
