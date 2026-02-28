@@ -26,6 +26,8 @@ import {
     TEXT_SECONDARY,
 } from '@/constants/theme';
 import { supabase } from '@/src/lib/supabase';
+import { createStaggerAnimation, FadeIn } from '@/src/utils/animations';
+import { MotiView } from 'moti';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -100,29 +102,33 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-          <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={10}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
+          <MotiView {...createStaggerAnimation(0, 80)}>
+            <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={10}>
+              <Text style={styles.backText}>← Back</Text>
+            </Pressable>
 
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+          </MotiView>
 
-          <Text style={styles.header}>Initialize Identity</Text>
-          <Text style={styles.subtext}>Declare your standard and accept accountability.</Text>
+          <MotiView {...createStaggerAnimation(1, 80)}>
+            <Text style={styles.header}>Initialize Identity</Text>
+            <Text style={styles.subtext}>Declare your standard and accept accountability.</Text>
+          </MotiView>
 
           {errorMsg && (
-            <View style={styles.errorContainer}>
+            <MotiView {...FadeIn} style={styles.errorContainer}>
               <Text style={styles.errorText}>{errorMsg}</Text>
-            </View>
+            </MotiView>
           )}
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(2, 80)} style={styles.inputGroup}>
             <Text style={styles.label}>Name</Text>
             <TextInput
               style={styles.input}
@@ -131,9 +137,9 @@ export default function RegisterScreen() {
               value={name}
               onChangeText={setName}
             />
-          </View>
+          </MotiView>
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(3, 80)} style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={styles.input}
@@ -145,9 +151,9 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               autoComplete="email"
             />
-          </View>
+          </MotiView>
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(4, 80)} style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordContainer}>
               <TextInput
@@ -193,9 +199,9 @@ export default function RegisterScreen() {
                 </Text>
               </View>
             )}
-          </View>
+          </MotiView>
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(5, 80)} style={styles.inputGroup}>
             <Text style={styles.label}>Confirm Password</Text>
             <View style={styles.passwordContainer}>
               <TextInput
@@ -219,19 +225,23 @@ export default function RegisterScreen() {
                 />
               </Pressable>
             </View>
-          </View>
+          </MotiView>
 
-          <Pressable
-            style={[styles.primaryButton, loading && styles.disabledButton]}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>{loading ? 'Initializing...' : 'Establish Profile'}</Text>
-          </Pressable>
+          <MotiView {...createStaggerAnimation(6, 80)}>
+            <Pressable
+              style={[styles.primaryButton, loading && styles.disabledButton]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.primaryButtonText}>{loading ? 'Initializing...' : 'Establish Profile'}</Text>
+            </Pressable>
+          </MotiView>
 
-          <Pressable style={styles.linkButton} onPress={() => router.replace('/(auth)/login' as never)}>
-            <Text style={styles.linkText}>Active profile exists? Authenticate here.</Text>
-          </Pressable>
+          <MotiView {...createStaggerAnimation(7, 80)}>
+            <Pressable style={styles.linkButton} onPress={() => router.replace('/(auth)/login' as never)}>
+              <Text style={styles.linkText}>Active profile exists? Authenticate here.</Text>
+            </Pressable>
+          </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,30 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  RED,
-  SURFACE,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
+    BASE,
+    BORDER,
+    GOLD,
+    RED,
+    SURFACE,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
 } from '@/constants/theme';
 import { supabase } from '@/src/lib/supabase';
+import { createStaggerAnimation, FadeIn } from '@/src/utils/animations';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -62,24 +64,26 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           {/* Logo */}
-          <View style={styles.logoContainer}>
+          <MotiView {...createStaggerAnimation(0, 100)} style={styles.logoContainer}>
             <Image
               source={require('@/assets/images/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
-          </View>
+          </MotiView>
 
-          <Text style={styles.header}>Access Protocol</Text>
-          <Text style={styles.subtext}>Provide authorized credentials to resume performance tracking.</Text>
+          <MotiView {...createStaggerAnimation(1, 100)}>
+            <Text style={styles.header}>Access Protocol</Text>
+            <Text style={styles.subtext}>Provide authorized credentials to resume performance tracking.</Text>
+          </MotiView>
 
           {errorMsg && (
-            <View style={styles.errorContainer}>
+            <MotiView {...FadeIn} style={styles.errorContainer}>
               <Text style={styles.errorText}>{errorMsg}</Text>
-            </View>
+            </MotiView>
           )}
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(2, 100)} style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={styles.input}
@@ -91,9 +95,9 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoComplete="email"
             />
-          </View>
+          </MotiView>
 
-          <View style={styles.inputGroup}>
+          <MotiView {...createStaggerAnimation(3, 100)} style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordContainer}>
               <TextInput
@@ -117,26 +121,30 @@ export default function LoginScreen() {
                 />
               </Pressable>
             </View>
-          </View>
+          </MotiView>
 
-          <Pressable
-            style={[styles.primaryButton, loading && styles.disabledButton]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Authenticate'}</Text>
-          </Pressable>
+          <MotiView {...createStaggerAnimation(4, 100)}>
+            <Pressable
+              style={[styles.primaryButton, loading && styles.disabledButton]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Authenticate'}</Text>
+            </Pressable>
+          </MotiView>
 
-          <Pressable
-            style={styles.forgotPasswordButton}
-            onPress={() => router.push('/(auth)/reset-password' as never)}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </Pressable>
+          <MotiView {...createStaggerAnimation(5, 100)}>
+            <Pressable
+              style={styles.forgotPasswordButton}
+              onPress={() => router.push('/(auth)/reset-password' as never)}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </Pressable>
 
-          <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
-            <Text style={styles.linkText}>No identity profile? Establish one here.</Text>
-          </Pressable>
+            <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
+              <Text style={styles.linkText}>No identity profile? Establish one here.</Text>
+            </Pressable>
+          </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

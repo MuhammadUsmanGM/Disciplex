@@ -2,9 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
 
-import { BASE } from '@/constants/theme';
+import { AnimatedSplashScreen } from '@/src/components/ui/AnimatedSplashScreen';
 import { ErrorBoundary } from '@/src/components/ui/ErrorBoundary';
 import { ThemeProvider } from '@/src/contexts/ThemeContext';
 import { configureNotifications } from '@/src/lib/notifications';
@@ -17,6 +16,7 @@ export default function RootLayout() {
   const { session, initialized, initialize } = useAuthStore();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     initialize();
@@ -54,20 +54,23 @@ export default function RootLayout() {
     }
   }, [session, initialized, onboardingChecked, onboardingComplete, segments, router]);
 
-  if (!initialized || !onboardingChecked) {
-    return <View style={{ flex: 1, backgroundColor: BASE }} />;
-  }
+  // Ensure routing system catches up before unmounting splash
+  const isDataReady = initialized && onboardingChecked;
 
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <>
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="light" />
+
+          {(!isDataReady || !splashDone) && (
+            <AnimatedSplashScreen onAnimationComplete={() => setSplashDone(true)} />
+          )}
         </>
       </ThemeProvider>
     </ErrorBoundary>
