@@ -3,18 +3,17 @@
  * Manages notification permissions, scheduling, and milestone tracking
  */
 
-import { useEffect, useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
-  calculateWeekNumber,
-  cancel7DayMilestone,
-  cancelWeeklyReckoning,
-  checkNotificationPermission,
-  configureNotifications,
-  hasSevenDayMilestone,
-  requestNotificationPermission,
-  schedule7DayMilestone,
-  scheduleWeeklyReckoning,
+    cancel7DayMilestone,
+    cancelWeeklyReckoning,
+    checkNotificationPermission,
+    configureNotifications,
+    hasSevenDayMilestone,
+    requestNotificationPermission,
+    schedule7DayMilestone,
+    scheduleWeeklyReckoning
 } from '@/src/lib/notifications';
 
 interface UseNotificationsReturn {
@@ -65,7 +64,9 @@ export function useNotifications(): UseNotificationsReturn {
    */
   const scheduleReckoning = useCallback(
     async (time: string, estimatedScore?: number): Promise<void> => {
-      if (!permissionGranted) {
+      // Check actual permission again to handle race conditions during toggle
+      const hasPermission = await checkNotificationPermission();
+      if (!hasPermission) {
         console.warn('Cannot schedule reckoning: permission not granted');
         return;
       }
@@ -90,7 +91,8 @@ export function useNotifications(): UseNotificationsReturn {
    */
   const checkAndScheduleMilestone = useCallback(
     async (scoreHistory: Array<{ date: string; score: number }>): Promise<void> => {
-      if (!permissionGranted) {
+      const hasPermission = await checkNotificationPermission();
+      if (!hasPermission) {
         return;
       }
 

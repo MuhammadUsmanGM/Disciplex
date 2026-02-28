@@ -5,6 +5,7 @@
  * Reference: disciplex.md Section 7 - Monetization Strategy
  */
 
+import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
   PACKAGE_TYPE,
@@ -35,6 +36,11 @@ export const PRICING = {
  * Call this on app start after auth is initialized
  */
 export async function initializeRevenueCat(userId: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    console.log('RevenueCat: Skipping initialization on Web platform.');
+    return;
+  }
+
   if (!REVENUECAT_API_KEY) {
     console.warn('EXPO_PUBLIC_REVENUECAT_API_KEY not configured. Payments will not work.');
     return;
@@ -82,7 +88,7 @@ export async function logOutFromRevenueCat(): Promise<void> {
  * Get current customer info (subscription status)
  */
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {
-  if (!REVENUECAT_API_KEY) return null;
+  if (Platform.OS === 'web' || !REVENUECAT_API_KEY) return null;
 
   try {
     const customerInfo = await Purchases.getCustomerInfo();

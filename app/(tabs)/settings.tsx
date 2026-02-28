@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
     BASE,
@@ -116,7 +116,7 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error('Failed to save reckoning time:', error);
-      alert('Failed to save preference');
+      Alert.alert('Error', 'Failed to save preference');
     } finally {
       setIsSaving(false);
       setShowTimePicker(false);
@@ -152,10 +152,10 @@ export default function SettingsScreen() {
         totalKeys: allKeys.length,
       });
 
-      alert('Data export coming in next update. For now, check console for debug output.');
+      Alert.alert('Export', 'Data export coming in next update. For now, check console for debug output.');
     } catch (error) {
       console.error('Export error:', error);
-      alert('Failed to export data');
+      Alert.alert('Error', 'Failed to export data');
     }
   };
 
@@ -163,41 +163,58 @@ export default function SettingsScreen() {
     try {
       await AsyncStorage.removeItem('onboarding_complete');
       await AsyncStorage.removeItem('onboarding_data');
-      alert('Onboarding reset. Restart the app to begin again.');
+      Alert.alert('Reset', 'Onboarding reset. Restart the app to begin again.');
     } catch (error) {
       console.error('Reset error:', error);
-      alert('Failed to reset onboarding');
+      Alert.alert('Error', 'Failed to reset onboarding');
     }
   };
 
   const handleSignOut = async () => {
-    const confirmed = confirm('Are you sure you want to sign out?');
-    if (confirmed) {
-      await supabase.auth.signOut();
-      router.replace('/(auth)/login');
-    }
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: async () => {
+            await supabase.auth.signOut();
+            router.replace('/(auth)/login');
+          }
+        },
+      ]
+    );
   };
 
   const handleDeleteAllData = async () => {
-    const confirmed = confirm(
+    Alert.alert(
+      'Delete All Data',
       'This will permanently delete all your habits, completions, and scores. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Everything',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.multiRemove([
+                'onboarding_complete',
+                'onboarding_data',
+                'disciplex_habit_store',
+              ]);
+              Alert.alert('System Reset', 'All data deleted. Restart the app to begin fresh.');
+              await supabase.auth.signOut();
+              router.replace('/(auth)/login');
+            } catch (error) {
+              console.error('Delete error:', error);
+              Alert.alert('Error', 'Failed to delete data');
+            }
+          }
+        }
+      ]
     );
-
-    if (confirmed) {
-      try {
-        await AsyncStorage.multiRemove([
-          'onboarding_complete',
-          'onboarding_data',
-          'disciplex_habit_store',
-        ]);
-        alert('All data deleted. Restart the app to begin fresh.');
-        await supabase.auth.signOut();
-        router.replace('/(auth)/login');
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Failed to delete data');
-      }
-    }
   };
 
   const formatTimeDisplay = (time: string) => {
