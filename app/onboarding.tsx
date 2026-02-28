@@ -3,27 +3,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-    Animated,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Animated,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 import {
-    BASE,
-    BORDER,
-    GOLD,
-    GOLD_SUBTLE,
-    SURFACE,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
+  BASE,
+  BORDER,
+  GOLD,
+  GOLD_SUBTLE,
+  SURFACE,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
 } from '@/constants/theme';
 
 type TonePreference = 'analytical' | 'brutal';
@@ -558,6 +558,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 60,
     paddingBottom: 8,
+    width: '100%',
   },
   dot: {
     width: 6,
@@ -590,10 +591,11 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     flexGrow: 1,
-    paddingHorizontal: 28,
+    paddingHorizontal: 20,
     paddingTop: 100,
     paddingBottom: 48,
     justifyContent: 'flex-start',
+    alignItems: 'stretch',
   },
 
   // Welcome
@@ -820,9 +822,9 @@ const styles = StyleSheet.create({
   timePickerControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
-    paddingHorizontal: 8,
+    gap: 32,
   },
   timeButton: {
     width: 56,

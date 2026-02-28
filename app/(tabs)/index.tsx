@@ -256,14 +256,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 120,
   },
 
   // Header
   header: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   dateText: {
     color: TEXT_MUTED,
