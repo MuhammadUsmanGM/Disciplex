@@ -13,6 +13,8 @@ import {
 import {
   BASE,
   BORDER,
+  GLASS_BORDER,
+  GLASS_SURFACE,
   GOLD,
   RED,
   SURFACE,
@@ -570,12 +572,16 @@ function StatCard({
 const statStyles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
+    borderColor: GLASS_BORDER,
+    borderRadius: 12,
     padding: 14,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   label: {
     color: TEXT_MUTED,
@@ -647,12 +653,16 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
+    borderColor: GLASS_BORDER,
+    borderRadius: 14,
     padding: 18,
-    marginBottom: 14,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   cardDanger: {
     borderColor: '#3A1A1A',

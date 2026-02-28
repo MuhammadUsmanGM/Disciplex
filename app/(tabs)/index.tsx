@@ -15,16 +15,17 @@ import {
 import {
     BASE,
     BORDER,
+    GLASS_BORDER,
+    GLASS_SURFACE,
     GOLD,
     GOLD_SUBTLE,
     RED,
-    SURFACE,
     SURFACE_2,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     getScoreColor,
-    getScoreLabel,
+    getScoreLabel
 } from '@/constants/theme';
 import { CheckBurst } from '@/src/components/ui/CheckBurst';
 import { useHabitStore } from '@/src/store/useHabitStore';
@@ -345,12 +346,16 @@ const styles = StyleSheet.create({
 
   // Identity Claim
   claimBlock: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
+    borderColor: GLASS_BORDER,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   claimHeader: {
     flexDirection: 'row',
@@ -405,10 +410,10 @@ const styles = StyleSheet.create({
   habitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
+    borderColor: GLASS_BORDER,
+    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginBottom: 10,

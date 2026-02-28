@@ -11,6 +11,8 @@ import {
 import {
     BASE,
     BORDER,
+    GLASS_BORDER,
+    GLASS_SURFACE,
     GOLD,
     GOLD_SUBTLE,
     RED,
@@ -281,13 +283,17 @@ const styles = StyleSheet.create({
 
   // Alignment Card
   alignmentCard: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
+    borderColor: GLASS_BORDER,
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   alignmentLabel: {
     color: TEXT_MUTED,
@@ -344,12 +350,16 @@ const styles = StyleSheet.create({
 
   // Generic Card
   card: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 18,
-    marginBottom: 14,
+    borderColor: GLASS_BORDER,
+    borderRadius: 14,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   cardLabel: {
     color: GOLD,

@@ -13,6 +13,12 @@ export const SURFACE_3 = '#222222';
 export const BORDER = '#2A2A2A';
 export const BORDER_LIGHT = '#3A3A3A';
 
+// Glassmorphism effect tokens
+export const GLASS_SURFACE = 'rgba(255, 255, 255, 0.04)';
+export const GLASS_SURFACE_DARK = 'rgba(0, 0, 0, 0.2)';
+export const GLASS_BORDER = 'rgba(255, 255, 255, 0.08)';
+export const GLASS_BORDER_LIGHT = 'rgba(255, 255, 255, 0.12)';
+
 // Text
 export const TEXT_PRIMARY = '#F5F5F5';
 export const TEXT_SECONDARY = '#888888';
