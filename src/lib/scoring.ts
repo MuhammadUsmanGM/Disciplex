@@ -79,28 +79,47 @@ function identityAlignment(todayScore: number, last6DayScores: number[]): number
 
 // ─── Step 6: Identity Debt ───────────────────────────────────────────────────
 
+export interface DebtUpdateResult {
+  newDebt: number;
+  newEntries: { type: 'miss' | 'late' | 'penalty', label: string, amount: number }[];
+}
+
 export function updateDebt(
   currentDebt: number,
   habits: Habit[],
   completions: Completion[],
   adjustedScore: number,
   consecutiveHighDays: number, // days in a row with score > 85
-): number {
+): DebtUpdateResult {
+  const newEntries: { type: 'miss' | 'late' | 'penalty', label: string, amount: number }[] = [];
+  
   // Add 10 per missed non-negotiable
   const missedNonNeg = habits.filter(
     (h) => h.is_non_negotiable && !isCompleted(h.id, completions),
-  ).length;
-  let debt = currentDebt + missedNonNeg * 10;
+  );
+  
+  missedNonNeg.forEach(h => {
+     newEntries.push({ type: 'miss', label: `Missed: ${h.name}`, amount: 10 });
+  });
+
+  let debt = currentDebt + missedNonNeg.length * 10;
 
   // Debt clears after 2 consecutive days > 85
   if (consecutiveHighDays >= 2) {
+    if (debt > 0) {
+      newEntries.push({ type: 'penalty', label: 'Overtime Bonus Cleared Debt', amount: -debt });
+    }
     debt = 0;
   } else if (adjustedScore > 85) {
     // Decay at 5 points/day of high performance
+    const decay = Math.min(debt, 5);
+    if (decay > 0) {
+        newEntries.push({ type: 'penalty', label: 'Overtime Payment', amount: -decay });
+    }
     debt = Math.max(0, debt - 5);
   }
 
-  return debt;
+  return { newDebt: debt, newEntries };
 }
 
 function finalAlignment(alignment: number, debt: number): number {

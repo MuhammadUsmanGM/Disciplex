@@ -33,7 +33,7 @@ export default function IdentityScreen() {
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [alignmentPercentage, setAlignmentPercentage] = useState<number>(0);
 
-  const { habits, getHabitsWithStatus, getLast7DayScores } = useHabitStore();
+  const { habits, getHabitsWithStatus, getLast7DayScores, debtEntries } = useHabitStore();
 
   // Load onboarding data from Supabase
   useFocusEffect(
@@ -194,6 +194,37 @@ export default function IdentityScreen() {
                   ]}
                 />
               </View>
+            </View>
+
+            {/* Penalty Ledger */}
+            <View style={styles.card}>
+              <View style={styles.ledgerHeader}>
+                <Text style={styles.cardLabel}>Identity Penalty Ledger</Text>
+                <Text style={styles.ledgerSub}>History of drift & discipline</Text>
+              </View>
+              
+              {debtEntries.length === 0 ? (
+                <Text style={styles.emptyLedgerText}>No entries in the ledger. Your record is clean.</Text>
+              ) : (
+                <View style={styles.ledgerList}>
+                  {debtEntries.map((entry) => (
+                    <View key={entry.id} style={styles.ledgerRow}>
+                      <View style={styles.ledgerInfo}>
+                        <Text style={styles.ledgerDate}>
+                          {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </Text>
+                        <Text style={styles.ledgerLabel}>{entry.label}</Text>
+                      </View>
+                      <Text style={[
+                        styles.ledgerAmount,
+                        { color: entry.amount > 0 ? RED : GOLD }
+                      ]}>
+                        {entry.amount > 0 ? `+${entry.amount}` : entry.amount} pts
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
             {/* Contract Reminder */}
@@ -470,5 +501,54 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
+  },
+  // Ledger
+  ledgerHeader: {
+    marginBottom: 16,
+  },
+  ledgerSub: {
+    color: TEXT_MUTED,
+    fontSize: 9,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 0.5,
+    marginTop: -4,
+  },
+  ledgerList: {
+    gap: 12,
+  },
+  ledgerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  ledgerInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  ledgerDate: {
+    color: TEXT_MUTED,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
+    textTransform: 'uppercase',
+  },
+  ledgerLabel: {
+    color: TEXT_PRIMARY,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  ledgerAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
+  },
+  emptyLedgerText: {
+    color: TEXT_MUTED,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
   },
 });

@@ -24,3 +24,11 @@ export interface HabitWithCompletion extends Habit {
   completion?: Completion;
   completion_rate?: number;
 }
+
+export interface DebtEntry {
+  id: string;
+  date: string;
+  type: 'miss' | 'late' | 'penalty';
+  label: string;
+  amount: number;
+}
