@@ -1,7 +1,7 @@
 import { supabase } from '@/src/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState , useEffect} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Image,
@@ -861,13 +861,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    gap: 32,
+    gap: 16, // Reduced from 32
   },
   timeButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: SURFACE,
     borderWidth: 1,
     borderColor: BORDER,
@@ -876,16 +875,16 @@ const styles = StyleSheet.create({
   },
   timeButtonText: {
     color: TEXT_PRIMARY,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '400',
   },
   timeDisplay: {
     alignItems: 'center',
-    paddingHorizontal: 16,
+    minWidth: 130, // Ensured stable container
   },
   timeValue: {
     color: TEXT_PRIMARY,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     fontFamily: 'ui-monospace',
     letterSpacing: 1,
