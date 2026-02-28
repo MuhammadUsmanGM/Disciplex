@@ -1,43 +1,29 @@
-import { BASE, GLOW_GOLD } from '@/constants/theme';
+import { BASE, GOLD_SUBTLE_2, RED_SUBTLE_2 } from '@/constants/theme';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 export function LiveBackground() {
   const { width, height } = useWindowDimensions();
 
-  return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: BASE, overflow: 'hidden' }]}>
-      {/* Orb 1: Gold Performance Glow */}
-      <MotiView
-        from={{ translateX: -100, translateY: -100, scale: 1 }}
-        animate={{ 
-          translateX: width * 0.7, 
-          translateY: height * 0.2,
-          scale: 1.5
-        }}
-        transition={{
-          type: 'timing',
-          duration: 15000,
-          loop: true,
-          repeatReverse: true,
-        }}
-        style={[styles.orb, { 
-          width: 300, 
-          height: 300, 
-          backgroundColor: GLOW_GOLD,
-          top: 0,
-          left: 0,
-        }]}
-      />
+  // Generate grid lines
+  const horizontalLines = useMemo(() => Array.from({ length: 25 }), []);
+  const verticalLines = useMemo(() => Array.from({ length: 15 }), []);
 
-      {/* Orb 2: Red Consequence Glow */}
+  return (
+    <View style={styles.container}>
+      {/* Base Layer */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: BASE }]} />
+
+      {/* Primary Glow Orb (Top Right) */}
       <MotiView
-        from={{ translateX: width, translateY: height, scale: 1 }}
+        from={{ scale: 0.8, opacity: 0.2, translateX: width * 0.5, translateY: -100 }}
         animate={{ 
-          translateX: width * 0.1, 
-          translateY: height * 0.6,
-          scale: 1.2
+          scale: 1.5, 
+          opacity: 0.5,
+          translateX: width * 0.2,
+          translateY: 100
         }}
         transition={{
           type: 'timing',
@@ -45,58 +31,102 @@ export function LiveBackground() {
           loop: true,
           repeatReverse: true,
         }}
-        style={[styles.orb, { 
-          width: 400, 
-          height: 400, 
-          backgroundColor: 'rgba(204, 0, 0, 0.05)',
-          bottom: 0,
-          right: 0,
-        }]}
+        style={[styles.orb, { width: 500, height: 500, backgroundColor: GOLD_SUBTLE_2 }]}
       />
 
-      {/* Scanline / Grid Overlay */}
-      <View style={styles.gridContainer} pointerEvents="none">
-        {[...Array(20)].map((_, i) => (
-          <View key={`h-${i}`} style={[styles.gridLineH, { top: `${(i / 20) * 100}%` }]} />
-        ))}
-        {[...Array(12)].map((_, i) => (
-          <View key={`v-${i}`} style={[styles.gridLineV, { left: `${(i / 12) * 100}%` }]} />
-        ))}
-      </View>
+      {/* Secondary Glow Orb (Bottom Left) */}
+      <MotiView
+        from={{ scale: 1.2, opacity: 0.1, translateX: -200, translateY: height }}
+        animate={{ 
+          scale: 0.8, 
+          opacity: 0.3,
+          translateX: 100,
+          translateY: height * 0.6
+        }}
+        transition={{
+          type: 'timing',
+          duration: 25000,
+          loop: true,
+          repeatReverse: true,
+        }}
+        style={[styles.orb, { width: 600, height: 600, backgroundColor: RED_SUBTLE_2 }]}
+      />
 
-      {/* Subtle Noise / Gradient Overlay */}
-      <View style={styles.overlay} pointerEvents="none" />
+      {/* Moving Grid System */}
+      <MotiView
+        animate={{ translateY: -40 }}
+        transition={{
+          type: 'timing',
+          duration: 5000,
+          loop: true,
+          repeatReverse: false,
+          easing: (t) => t, // Truly linear
+        }}
+        style={styles.gridContainer}
+        pointerEvents="none"
+      >
+        {horizontalLines.map((_, i) => (
+          <View key={`h-${i}`} style={[styles.gridLineH, { top: i * 40 }]} />
+        ))}
+        {verticalLines.map((_, i) => (
+          <View key={`v-${i}`} style={[styles.gridLineV, { left: (width / 14) * i }]} />
+        ))}
+      </MotiView>
+
+      {/* Scanline Effect Layer */}
+      <View style={styles.scanlineOverlay} pointerEvents="none" />
+      
+      {/* Radial Vignette Overlay for Depth */}
+      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Defs>
+          <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={BASE} stopOpacity="0.8" />
+            <Stop offset="50%" stopColor={BASE} stopOpacity="0" />
+            <Stop offset="100%" stopColor={BASE} stopOpacity="0.8" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#grad)" />
+      </Svg>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: BASE,
+    overflow: 'hidden',
+  },
   orb: {
     position: 'absolute',
-    borderRadius: 200,
-    opacity: 0.4,
-    filter: 'blur(80px)', // Note: standard RN doesn't support filter, but many templates do. Using blur as fallback.
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 300,
+    filter: 'blur(100px)', // For platforms that support it
+    opacity: 0.5,
   },
   gridContainer: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.1,
+    position: 'absolute',
+    top: -40,
+    left: 0,
+    right: 0,
+    bottom: -40,
+    opacity: 0.15,
   },
   gridLineH: {
     position: 'absolute',
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   gridLineV: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  scanlineOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10, 10, 10, 0.2)',
   },
 });

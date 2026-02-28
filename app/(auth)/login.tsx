@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import {
-    Image,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -11,20 +10,19 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     View,
 } from 'react-native';
 
 import {
     BASE,
-    BORDER,
     GOLD,
     RED,
-    SURFACE,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 } from '@/constants/theme';
+import { LiveBackground } from '@/src/components/ui/LiveBackground';
+import { PremiumInput } from '@/src/components/ui/PremiumInput';
 import { supabase } from '@/src/lib/supabase';
 import { createStaggerAnimation, FadeIn } from '@/src/utils/animations';
 
@@ -58,82 +56,77 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
+      <LiveBackground />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-          {/* Logo */}
-          <MotiView {...createStaggerAnimation(0, 100)} style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/favicon.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </MotiView>
-
-          <MotiView {...createStaggerAnimation(1, 100)}>
+          <MotiView {...createStaggerAnimation(0, 100)} style={styles.headerContainer}>
+            <Text style={styles.kicker}>Disciplex OS</Text>
             <Text style={styles.header}>Access Protocol</Text>
             <Text style={styles.subtext}>Provide authorized credentials to resume performance tracking.</Text>
           </MotiView>
 
           {errorMsg && (
             <MotiView {...FadeIn} style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={16} color={RED} style={{ marginRight: 8 }} />
               <Text style={styles.errorText}>{errorMsg}</Text>
             </MotiView>
           )}
 
-          <MotiView {...createStaggerAnimation(2, 100)} style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
+          <MotiView {...createStaggerAnimation(1, 100)}>
+            <PremiumInput
+              label="Email Address"
               placeholder="you@email.com"
-              placeholderTextColor={TEXT_MUTED}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              leftIcon={<Ionicons name="mail-outline" size={20} color={TEXT_MUTED} />}
             />
           </MotiView>
 
-          <MotiView {...createStaggerAnimation(3, 100)} style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="••••••••"
-                placeholderTextColor={TEXT_MUTED}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="current-password"
-              />
-              <Pressable
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
-                  color={TEXT_MUTED}
-                />
-              </Pressable>
-            </View>
+          <MotiView {...createStaggerAnimation(2, 100)}>
+            <PremiumInput
+              label="Password"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoComplete="current-password"
+              leftIcon={<Ionicons name="lock-closed-outline" size={20} color={TEXT_MUTED} />}
+              rightIcon={
+                <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={TEXT_MUTED}
+                  />
+                </Pressable>
+              }
+            />
           </MotiView>
 
-          <MotiView {...createStaggerAnimation(4, 100)}>
+          <MotiView {...createStaggerAnimation(3, 100)}>
             <Pressable
-              style={[styles.primaryButton, loading && styles.disabledButton]}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                loading && styles.disabledButton,
+                pressed && { scale: 0.98, opacity: 0.9 }
+              ]}
               onPress={handleLogin}
               disabled={loading}
             >
-              <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Authenticate'}</Text>
+              <Text style={styles.primaryButtonText}>
+                {loading ? 'Authenticating...' : 'Authenticate'}
+              </Text>
             </Pressable>
           </MotiView>
 
-          <MotiView {...createStaggerAnimation(5, 100)}>
+          <MotiView {...createStaggerAnimation(4, 100)} style={styles.footer}>
             <Pressable
               style={styles.forgotPasswordButton}
               onPress={() => router.push('/(auth)/reset-password' as never)}
@@ -141,8 +134,10 @@ export default function LoginScreen() {
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </Pressable>
 
+            <View style={styles.divider} />
+
             <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
-              <Text style={styles.linkText}>No identity profile? Establish one here.</Text>
+              <Text style={styles.linkText}>Establish new identity profile</Text>
             </Pressable>
           </MotiView>
         </ScrollView>
@@ -155,89 +150,62 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BASE },
   container: {
     paddingHorizontal: 28,
-    paddingTop: 80,
+    paddingTop: 100,
     paddingBottom: 48,
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
-  logoContainer: {
-    alignItems: 'center',
+  headerContainer: {
     marginBottom: 40,
   },
-  logo: {
-    width: 240,
-    height: 80,
+  kicker: {
+    color: GOLD,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    fontFamily: 'ui-monospace',
   },
   header: {
     color: TEXT_PRIMARY,
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    marginBottom: 8,
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -1,
+    marginBottom: 12,
   },
   subtext: {
     color: TEXT_SECONDARY,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 40,
+    fontSize: 16,
+    lineHeight: 24,
   },
   errorContainer: {
-    backgroundColor: 'rgba(204, 0, 0, 0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(204, 0, 0, 0.05)',
     borderWidth: 1,
-    borderColor: RED,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
+    borderColor: 'rgba(204, 0, 0, 0.2)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
   },
   errorText: {
     color: RED,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'ui-monospace',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    color: TEXT_MUTED,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    fontFamily: 'ui-monospace',
-  },
-  input: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-    padding: 16,
-    color: TEXT_PRIMARY,
-    fontSize: 16,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-  },
-  passwordInput: {
     flex: 1,
-    padding: 16,
-    color: TEXT_PRIMARY,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 16,
   },
   primaryButton: {
     backgroundColor: GOLD,
-    borderRadius: 10,
-    paddingVertical: 16,
+    borderRadius: 12,
+    paddingVertical: 18,
     alignItems: 'center',
     marginTop: 12,
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   disabledButton: {
     opacity: 0.5,
@@ -245,23 +213,33 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: BASE,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  footer: {
+    marginTop: 32,
+    alignItems: 'center',
   },
   forgotPasswordButton: {
-    marginTop: 16,
-    alignItems: 'center',
+    padding: 10,
   },
   forgotPasswordText: {
     color: GOLD,
     fontSize: 14,
     fontWeight: '600',
   },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    width: '100%',
+    marginVertical: 24,
+  },
   linkButton: {
-    marginTop: 24,
-    alignItems: 'center',
+    padding: 10,
   },
   linkText: {
-    color: TEXT_MUTED,
+    color: TEXT_SECONDARY,
     fontSize: 14,
     textDecorationLine: 'underline',
   },

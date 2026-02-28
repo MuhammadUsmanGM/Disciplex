@@ -3,28 +3,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Animated,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  GOLD_SUBTLE,
-  SURFACE,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
+    BASE,
+    GOLD,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY
 } from '@/constants/theme';
+import { LiveBackground } from '@/src/components/ui/LiveBackground';
+import { PremiumInput } from '@/src/components/ui/PremiumInput';
 
 type TonePreference = 'analytical' | 'brutal';
 
@@ -60,7 +57,7 @@ export default function OnboardingScreen() {
       callback();
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 200,
+        duration: 250,
         useNativeDriver: true,
       }).start();
     });
@@ -71,7 +68,6 @@ export default function OnboardingScreen() {
 
   const [saving, setSaving] = useState(false);
 
-  // Auto-resume check: If user already has data in Supabase, skip onboarding
   useEffect(() => {
     const checkExistingProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -101,7 +97,6 @@ export default function OnboardingScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      // 1. Save identity claims to users table
       const { error: userError } = await supabase.from('users').upsert({
         id: user.id,
         identity_claim: data.identity_claim,
@@ -112,7 +107,6 @@ export default function OnboardingScreen() {
 
       if (userError) throw userError;
 
-      // 2. Insert non-negotiables to habits table
       const habitsToInsert = data.non_negotiables.map((name) => ({
         user_id: user.id,
         name,
@@ -124,9 +118,7 @@ export default function OnboardingScreen() {
 
       if (habitsError) throw habitsError;
 
-      // 3. Mark locally as complete
       await AsyncStorage.setItem('onboarding_complete', 'true');
-      await AsyncStorage.setItem('onboarding_data', JSON.stringify(data));
       router.replace('/(tabs)' as never);
     } catch (error) {
       console.error('Error during onboarding save:', error);
@@ -151,7 +143,8 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Progress dots — hidden on welcome and completion */}
+      <LiveBackground />
+      
       {step > 0 && step < TOTAL_STEPS - 1 && (
         <View style={styles.progressContainer}>
           {Array.from({ length: TOTAL_STEPS - 2 }).map((_, i) => (
@@ -166,10 +159,9 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {/* Back button */}
       {step > 0 && step < TOTAL_STEPS - 1 && (
         <Pressable onPress={goBack} style={styles.backButton} hitSlop={12}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>← PREVIOUS</Text>
         </Pressable>
       )}
 
@@ -224,24 +216,22 @@ export default function OnboardingScreen() {
 function WelcomeStep({ onNext, onSignOut }: { onNext: () => void; onSignOut: () => void }) {
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('@/assets/images/favicon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+      <View style={styles.welcomeHeader}>
+        <Text style={styles.kicker}>Protocol Initialization</Text>
+        <Text style={styles.welcomeTitle}>Disciplex OS</Text>
       </View>
-      <Text style={styles.tagline}>Prove it. Daily.</Text>
+      
+      <Text style={styles.tagline}>PROVE IT. DAILY.</Text>
       <Text style={styles.welcomeBody}>
         Disciplex is not a habit tracker.{'\n'}
-        It is a behavioral measurement system — built for people who are done lying to themselves.
+        It is a behavioral measurement system built for people who are done lying to themselves.
       </Text>
       <Pressable style={styles.primaryButton} onPress={onNext}>
-        <Text style={styles.primaryButtonText}>Begin</Text>
+        <Text style={styles.primaryButtonText}>INITIALIZE</Text>
       </Pressable>
 
       <Pressable style={styles.signOutButton} onPress={onSignOut}>
-        <Text style={styles.signOutText}>Use a different account? Logout</Text>
+        <Text style={styles.signOutText}>SWITCH ACCOUNT</Text>
       </Pressable>
     </ScrollView>
   );
@@ -264,28 +254,27 @@ function IdentityClaimStep({
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.stepLabel}>01 / 04</Text>
+        <Text style={styles.stepLabel}>Step 01 / 04</Text>
         <Text style={styles.stepHeading}>Who are you becoming?</Text>
         <Text style={styles.stepSubtext}>
           This is your standard — not a wish. Write it as if it is already true.
         </Text>
-        <TextInput
-          style={styles.largeInput}
+        
+        <PremiumInput
+          label="Identity Statement"
           value={value}
           onChangeText={onChange}
-          placeholder="I am someone who executes before I consume."
-          placeholderTextColor={TEXT_MUTED}
+          placeholder="e.g. I am someone who executes before I consume."
           multiline
-          autoFocus
-          returnKeyType="done"
-          blurOnSubmit
+          numberOfLines={3}
+          hint="Be specific. Vague identity produces vague behavior."
         />
-        <Text style={styles.inputHint}>Be specific. Vague identity produces vague behavior.</Text>
+
         <Pressable
           style={[styles.primaryButton, !canAdvance && styles.primaryButtonDisabled]}
           onPress={canAdvance ? onNext : undefined}
         >
-          <Text style={styles.primaryButtonText}>Continue</Text>
+          <Text style={styles.primaryButtonText}>CONTINUE</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -309,30 +298,27 @@ function CounteridentityStep({
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.stepLabel}>02 / 04</Text>
+        <Text style={styles.stepLabel}>Step 02 / 04</Text>
         <Text style={styles.stepHeading}>Who do you refuse to be?</Text>
         <Text style={styles.stepSubtext}>
           Define the version of yourself you are actively rejecting. This is your line.
         </Text>
-        <TextInput
-          style={[styles.largeInput, styles.largeInputDanger]}
+        
+        <PremiumInput
+          label="Counter-Identity"
           value={value}
           onChangeText={onChange}
-          placeholder="Someone who delays, drifts, and excuses their way through the day."
-          placeholderTextColor={TEXT_MUTED}
+          placeholder="e.g. Someone who excuses their way through the day."
           multiline
-          autoFocus
-          returnKeyType="done"
-          blurOnSubmit
+          numberOfLines={3}
+          hint="Every missed non-negotiable is a vote for this version of you."
         />
-        <Text style={styles.inputHint}>
-          Every missed non-negotiable is a vote for this version of you.
-        </Text>
+
         <Pressable
           style={[styles.primaryButton, !canAdvance && styles.primaryButtonDisabled]}
           onPress={canAdvance ? onNext : undefined}
         >
-          <Text style={styles.primaryButtonText}>Continue</Text>
+          <Text style={styles.primaryButtonText}>CONTINUE</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -356,29 +342,27 @@ function NonNegotiablesStep({
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.stepLabel}>03 / 04</Text>
+        <Text style={styles.stepLabel}>Step 03 / 04</Text>
         <Text style={styles.stepHeading}>Define your 3 non-negotiables.</Text>
         <Text style={styles.stepSubtext}>
-          These are the daily behaviors that determine your alignment score. Miss one — you pay for it.
+          These behaviors determine your alignment score. Miss one — you pay for it.
         </Text>
-        {(['Behavior 1', 'Behavior 2', 'Behavior 3'] as const).map((label, i) => (
-          <View key={i} style={styles.behaviorRow}>
-            <Text style={styles.behaviorLabel}>{label}</Text>
-            <TextInput
-              style={styles.behaviorInput}
-              value={values[i]}
-              onChangeText={(v) => onChange(i, v)}
-              placeholder={`e.g. ${['Train for 45 minutes', 'Write 500 words', 'No phone before 10am'][i]}`}
-              placeholderTextColor={TEXT_MUTED}
-              returnKeyType={i < 2 ? 'next' : 'done'}
-            />
-          </View>
+        
+        {([0, 1, 2] as const).map((i) => (
+          <PremiumInput
+            key={i}
+            label={`Behavior 0${i + 1}`}
+            value={values[i]}
+            onChangeText={(v) => onChange(i, v)}
+            placeholder={[`Train for 45 minutes`, `Write 500 words`, `No phone before 10am`][i]}
+          />
         ))}
+
         <Pressable
           style={[styles.primaryButton, !canAdvance && styles.primaryButtonDisabled]}
           onPress={canAdvance ? onNext : undefined}
         >
-          <Text style={styles.primaryButtonText}>Continue</Text>
+          <Text style={styles.primaryButtonText}>CONTINUE</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -396,10 +380,10 @@ function ToneStep({
 }) {
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepLabel}>04 / 05</Text>
-      <Text style={styles.stepHeading}>How should I speak to you?</Text>
+      <Text style={styles.stepLabel}>Step 04 / 05</Text>
+      <Text style={styles.stepHeading}>Tone Selection.</Text>
       <Text style={styles.stepSubtext}>
-        Choose how your weekly Reckoning is delivered. You can change this later.
+        Choose how your weekly Reckoning is delivered. Control the pressure.
       </Text>
 
       <Pressable
@@ -407,10 +391,10 @@ function ToneStep({
         onPress={() => onChange('analytical')}
       >
         <Text style={[styles.toneCardTitle, value === 'analytical' && styles.toneCardTitleSelected]}>
-          Analytical
+          ANALYTICAL
         </Text>
         <Text style={styles.toneCardDesc}>
-          Data-driven. Precise. The numbers are presented without emotion — your interpretation is your own.
+          Data-driven. Precise. The numbers are presented without emotion.
         </Text>
       </Pressable>
 
@@ -419,15 +403,15 @@ function ToneStep({
         onPress={() => onChange('brutal')}
       >
         <Text style={[styles.toneCardTitle, value === 'brutal' && styles.toneCardTitleSelected]}>
-          Brutal
+          BRUTAL
         </Text>
         <Text style={styles.toneCardDesc}>
-          No excuses. No softening. The Reckoning says exactly what your behavior proves — nothing more.
+          No excuses. The Reckoning says exactly what your behavior proves.
         </Text>
       </Pressable>
 
       <Pressable style={styles.primaryButton} onPress={onNext}>
-        <Text style={styles.primaryButtonText}>Continue</Text>
+        <Text style={styles.primaryButtonText}>CONTINUE</Text>
       </Pressable>
     </ScrollView>
   );
@@ -460,43 +444,32 @@ function TimePickerStep({
 
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepLabel}>05 / 05</Text>
-      <Text style={styles.stepHeading}>When is your Reckoning?</Text>
+      <Text style={styles.stepLabel}>Step 05 / 05</Text>
+      <Text style={styles.stepHeading}>The Sunday Ritual.</Text>
       <Text style={styles.stepSubtext}>
-        Choose what time every Sunday you want to receive your Weekly Reckoning.
+        Define when your weekly performance verdict should be delivered.
       </Text>
 
       <View style={styles.timePickerContainer}>
-        <Text style={styles.timePickerLabel}>Sunday Delivery Time</Text>
+        <Text style={styles.timePickerLabel}>DELIVERY TIME</Text>
         
         <View style={styles.timePickerControls}>
-          <Pressable
-            style={styles.timeButton}
-            onPress={() => adjustTime(-1)}
-          >
+          <Pressable style={styles.timeButton} onPress={() => adjustTime(-1)}>
             <Text style={styles.timeButtonText}>−</Text>
           </Pressable>
 
           <View style={styles.timeDisplay}>
             <Text style={styles.timeValue}>{formatDisplayTime(value)}</Text>
-            <Text style={styles.timeSubtext}>Every Sunday</Text>
           </View>
 
-          <Pressable
-            style={styles.timeButton}
-            onPress={() => adjustTime(1)}
-          >
+          <Pressable style={styles.timeButton} onPress={() => adjustTime(1)}>
             <Text style={styles.timeButtonText}>+</Text>
           </Pressable>
         </View>
-
-        <Text style={styles.timeHint}>
-          This can be changed later in Settings
-        </Text>
       </View>
 
       <Pressable style={styles.primaryButton} onPress={onNext}>
-        <Text style={styles.primaryButtonText}>Continue</Text>
+        <Text style={styles.primaryButtonText}>CONTINUE</Text>
       </Pressable>
     </ScrollView>
   );
@@ -511,54 +484,28 @@ function CompletionStep({
   onComplete: () => void;
   saving?: boolean;
 }) {
-  const formatDisplayTime = (timeStr: string) => {
-    const [h, m] = timeStr.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const displayHours = h % 12 || 12;
-    return `${displayHours}:${m.toString().padStart(2, '0')} ${ampm}`;
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.checkCircle}>
-        <Text style={styles.checkMark}>✓</Text>
+      <View style={styles.statusBadge}>
+        <Text style={styles.statusText}>IDENTITY SECURED</Text>
       </View>
-      <Text style={styles.completionHeading}>Your identity is set.</Text>
+      <Text style={styles.completionHeading}>Setup Complete.</Text>
       <Text style={styles.stepSubtext}>
-        Now execution is the only variable. Here is what you have declared:
+        Your identity is now part of the Disciplex ledger. Execution is the only variable remaining.
       </Text>
 
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Identity Claim</Text>
+        <Text style={styles.summaryLabel}>IDENTITY CLAIM</Text>
         <Text style={styles.summaryValue}>{data.identity_claim}</Text>
       </View>
 
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Refuse To Be</Text>
-        <Text style={styles.summaryValue}>{data.refuse_to_be}</Text>
-      </View>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Non-Negotiables</Text>
+        <Text style={styles.summaryLabel}>3 NON-NEGOTIABLES</Text>
         {data.non_negotiables.map((n, i) => (
           <Text key={i} style={styles.summaryListItem}>
-            {i + 1}. {n}
+            0{i + 1}. {n}
           </Text>
         ))}
-      </View>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Reckoning Tone</Text>
-        <Text style={[styles.summaryValue, { textTransform: 'capitalize' }]}>
-          {data.tone_preference}
-        </Text>
-      </View>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Sunday Reckoning Time</Text>
-        <Text style={styles.summaryValue}>
-          {formatDisplayTime(data.reckoning_time)}
-        </Text>
       </View>
 
       <Pressable
@@ -566,7 +513,7 @@ function CompletionStep({
         onPress={onComplete}
         disabled={saving}
       >
-        <Text style={styles.primaryButtonText}>{saving ? 'Initializing...' : 'Enter Disciplex'}</Text>
+        <Text style={styles.primaryButtonText}>{saving ? 'PERSISTING...' : 'ENTER DISCIPLEX'}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -577,87 +524,90 @@ function CompletionStep({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BASE,
+    backgroundColor: '#000',
   },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     paddingTop: 60,
     paddingBottom: 8,
     width: '100%',
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   dotActive: {
     backgroundColor: GOLD,
-    width: 20,
-    borderRadius: 3,
+    width: 16,
+    borderRadius: 2,
   },
   dotInactive: {
-    backgroundColor: BORDER,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     position: 'absolute',
-    top: 56,
+    top: 60,
     left: 24,
     zIndex: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 2,
   },
   backText: {
-    color: TEXT_SECONDARY,
-    fontSize: 14,
-    letterSpacing: 0.3,
+    color: GOLD,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
   },
   content: {
     flex: 1,
   },
   stepContainer: {
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 28,
     paddingTop: 100,
     paddingBottom: 48,
     justifyContent: 'flex-start',
-    alignItems: 'stretch',
   },
-
-  // Welcome
-  logoContainer: {
-    alignItems: 'center',
+  welcomeHeader: {
     marginBottom: 40,
-    marginTop: 20,
   },
-  logo: {
-    width: 220,
-    height: 80,
+  kicker: {
+    color: GOLD,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace',
+    marginBottom: 12,
+  },
+  welcomeTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: 40,
+    fontWeight: '900',
+    letterSpacing: -1.5,
   },
   tagline: {
     color: GOLD,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 5,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   welcomeBody: {
     color: TEXT_SECONDARY,
     fontSize: 16,
     lineHeight: 26,
     textAlign: 'center',
-    marginBottom: 48,
+    marginBottom: 60,
   },
-
-  // Step labels & headings
   stepLabel: {
-    color: TEXT_MUTED,
+    color: GOLD,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 16,
@@ -665,88 +615,36 @@ const styles = StyleSheet.create({
   },
   stepHeading: {
     color: TEXT_PRIMARY,
-    fontSize: 30,
-    fontWeight: '700',
-    lineHeight: 38,
+    fontSize: 34,
+    fontWeight: '800',
+    lineHeight: 42,
     marginBottom: 12,
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   stepSubtext: {
     color: TEXT_SECONDARY,
-    fontSize: 15,
-    lineHeight: 23,
+    fontSize: 16,
+    lineHeight: 24,
     marginBottom: 32,
   },
-
-  // Inputs
-  largeInput: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-    padding: 18,
-    color: TEXT_PRIMARY,
-    fontSize: 17,
-    lineHeight: 26,
-    minHeight: 120,
-    textAlignVertical: 'top',
-    marginBottom: 12,
-  },
-  largeInputDanger: {
-    borderColor: '#3A1A1A',
-    backgroundColor: '#0F0A0A',
-  },
-  inputHint: {
-    color: TEXT_MUTED,
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 32,
-    letterSpacing: 0.2,
-  },
-
-  // Non-negotiables
-  behaviorRow: {
-    marginBottom: 16,
-  },
-  behaviorLabel: {
-    color: GOLD,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    fontFamily: 'ui-monospace',
-  },
-  behaviorInput: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: TEXT_PRIMARY,
-    fontSize: 15,
-  },
-
-  // Tone cards
   toneCard: {
-    backgroundColor: SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 14,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
   },
   toneCardSelected: {
     borderColor: GOLD,
-    backgroundColor: GOLD_SUBTLE,
+    backgroundColor: 'rgba(201, 168, 76, 0.05)',
   },
   toneCardTitle: {
     color: TEXT_SECONDARY,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 2,
     marginBottom: 8,
-    letterSpacing: -0.2,
   },
   toneCardTitleSelected: {
     color: GOLD,
@@ -756,150 +654,131 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
   },
-
-  // Buttons
   primaryButton: {
     backgroundColor: GOLD,
-    borderRadius: 10,
-    paddingVertical: 16,
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
   primaryButtonDisabled: {
-    opacity: 0.3,
+    opacity: 0.2,
   },
   primaryButtonText: {
     color: BASE,
     fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
   signOutButton: {
-    marginTop: 24,
+    marginTop: 32,
     alignItems: 'center',
-    padding: 10,
   },
   signOutText: {
     color: TEXT_MUTED,
-    fontSize: 14,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    fontWeight: '700',
     textDecorationLine: 'underline',
   },
-
-  // Completion
-  checkCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: GOLD,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(201, 168, 76, 0.1)',
+    borderRadius: 4,
     alignSelf: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 168, 76, 0.2)',
   },
-  checkMark: {
+  statusText: {
     color: GOLD,
-    fontSize: 28,
-    fontWeight: '300',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
   },
   completionHeading: {
     color: TEXT_PRIMARY,
-    fontSize: 30,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 12,
-    letterSpacing: -0.5,
   },
   summaryCard: {
-    backgroundColor: SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 10,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 20,
+    marginBottom: 12,
   },
   summaryLabel: {
-    color: GOLD,
+    color: TEXT_MUTED,
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 6,
+    marginBottom: 8,
     fontFamily: 'ui-monospace',
   },
   summaryValue: {
     color: TEXT_PRIMARY,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 15,
+    lineHeight: 24,
+    fontWeight: '600',
   },
   summaryListItem: {
     color: TEXT_PRIMARY,
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 24,
+    fontFamily: 'ui-monospace',
   },
-
-  // Time Picker
   timePickerContainer: {
-    backgroundColor: SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 24,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    padding: 32,
+    marginBottom: 32,
     alignItems: 'center',
   },
   timePickerLabel: {
     color: GOLD,
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 20,
-    fontFamily: 'ui-monospace',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 3,
+    marginBottom: 24,
   },
   timePickerControls: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16, // Reduced from 32
+    gap: 24,
   },
   timeButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   timeButtonText: {
     color: TEXT_PRIMARY,
-    fontSize: 24,
-    fontWeight: '400',
+    fontSize: 30,
+    fontWeight: '300',
   },
   timeDisplay: {
     alignItems: 'center',
-    minWidth: 130, // Ensured stable container
   },
   timeValue: {
     color: TEXT_PRIMARY,
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     fontFamily: 'ui-monospace',
-    letterSpacing: 1,
-  },
-  timeSubtext: {
-    color: TEXT_MUTED,
-    fontSize: 11,
-    marginTop: 4,
-    fontFamily: 'ui-monospace',
-  },
-  timeHint: {
-    color: TEXT_MUTED,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 16,
-    lineHeight: 18,
   },
 });
