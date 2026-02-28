@@ -78,7 +78,7 @@ export default function IdentityScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerLabel}>Identity</Text>
+          <Text style={styles.headerLabel}>Identity Debt</Text>
           <Text style={styles.headerSub}>Your contract with yourself</Text>
         </View>
 
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 48,
+    paddingBottom: 120,
   },
 
   // Header

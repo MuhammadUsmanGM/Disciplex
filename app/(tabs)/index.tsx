@@ -1,16 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+    Platform,
     Pressable,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     View,
-    Platform,
 } from 'react-native';
-import { MotiView } from 'moti';
 
 import {
     BASE,
@@ -26,11 +26,11 @@ import {
     getScoreColor,
     getScoreLabel,
 } from '@/constants/theme';
-import { StatusIcons, ActionIcons, FeatureIcons } from '@/src/utils/icons';
-import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { useHabitStore } from '@/src/store/useHabitStore';
-import { useRouter } from 'expo-router';
+import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
+import { ActionIcons, FeatureIcons } from '@/src/utils/icons';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -123,7 +123,7 @@ export default function HomeScreen() {
               >
                 <Pressable
                   style={styles.debtRow}
-                  onPress={() => router.push('/(tabs)/identity/debt-tracker' as any)}
+                  onPress={() => router.push('/(tabs)/identity' as any)}
                 >
                   <View style={styles.debtDot} />
                   <Text style={styles.debtText}>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 48,
+    paddingBottom: 120,
   },
 
   // Header

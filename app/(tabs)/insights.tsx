@@ -1,26 +1,26 @@
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import {
-    BASE,
-    BORDER,
-    GOLD,
-    RED,
-    SURFACE,
-    SURFACE_2,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    getScoreColor,
+  BASE,
+  BORDER,
+  GOLD,
+  RED,
+  SURFACE,
+  SURFACE_2,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  getScoreColor,
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 48,
+    paddingBottom: 120,
   },
 
   header: {

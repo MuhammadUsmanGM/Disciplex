@@ -85,7 +85,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="identity"
         options={{
-          href: null, // Hide from tab bar
+          title: 'Identity Debt',
+          tabBarIcon: ({ color, focused }) => (
+            <NavIcons.Debt
+              size={24}
+              color={focused ? GOLD : color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
