@@ -22,12 +22,14 @@ import {
     Menu,
     MoreHorizontal,
     Play,
+    Plus,
     RefreshCw,
     Settings,
     Share2,
     Shield,
     Star,
     Target,
+    Trash2,
     TrendingDown,
     TrendingUp,
     Trophy,
@@ -109,6 +111,12 @@ export const ActionIcons = {
   ),
   History: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
     <History size={size} color={color} strokeWidth={2} />
+  ),
+  Plus: ({ size = ICON_SIZES.md, color = ICON_COLORS.primary }: IconProps) => (
+    <Plus size={size} color={color} strokeWidth={2} />
+  ),
+  Trash: ({ size = ICON_SIZES.sm, color = ICON_COLORS.red }: IconProps) => (
+    <Trash2 size={size} color={color} strokeWidth={2} />
   ),
 };
 

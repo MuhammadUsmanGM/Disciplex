@@ -1,35 +1,35 @@
 /**
  * Edit Habit Screen
- * Allows users to edit habit name and non-negotiable status
+ * Tactical Protocol Modification V.01
  */
 
 import { supabase } from '@/src/lib/supabase';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  GOLD_SUBTLE,
-  RED,
-  RED_SUBTLE,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
+    BASE,
+    GOLD,
+    GOLD_SUBTLE,
+    RED,
+    SURFACE,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY
 } from '@/constants/theme';
+import { PremiumInput } from '@/src/components/ui/PremiumInput';
+import { useSound } from '@/src/hooks/useSound';
+import { ActionIcons } from '@/src/utils/icons';
+import { MotiView } from 'moti';
 
 interface Habit {
   id: string;
@@ -45,6 +45,7 @@ export default function EditHabitScreen() {
   const [name, setName] = useState('');
   const [isNonNegotiable, setIsNonNegotiable] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { playSound } = useSound();
 
   useEffect(() => {
     if (habitId) {
@@ -67,7 +68,7 @@ export default function EditHabitScreen() {
       .single();
 
     if (error || !data) {
-      Alert.alert('Error', 'Failed to load habit');
+      Alert.alert('ERROR', 'FAILED TO LOAD PROTOCOL');
       router.back();
     } else {
       setHabit(data as Habit);
@@ -76,11 +77,12 @@ export default function EditHabitScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Habit name is required');
+      Alert.alert('ERROR', 'PROTOCOL IDENTIFIER REQUIRED');
       return;
     }
 
     setSaving(true);
+    playSound('CHECK', 0.2);
 
     const { error } = await supabase
       .from('habits')
@@ -94,22 +96,22 @@ export default function EditHabitScreen() {
     setSaving(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('ERROR', error.message);
     } else {
-      Alert.alert('Success', 'Habit updated', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      playSound('COMPLETE', 0.4);
+      router.back();
     }
   };
 
   const handleDelete = () => {
+    playSound('ALERT', 0.3);
     Alert.alert(
-      'Delete Habit',
-      `Are you sure you want to delete "${name}"? This cannot be undone.`,
+      'TERMINATE PROTOCOL',
+      `PERMANENTLY REMOVE "${name.trim().toUpperCase()}" FROM SYSTEM?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'ABORT', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'TERMINATE',
           style: 'destructive',
           onPress: async () => {
             const { error } = await supabase
@@ -118,8 +120,9 @@ export default function EditHabitScreen() {
               .eq('id', habitId);
 
             if (error) {
-              Alert.alert('Error', error.message);
+              Alert.alert('ERROR', error.message);
             } else {
+              playSound('ALERT', 0.5);
               router.back();
             }
           },
@@ -132,7 +135,7 @@ export default function EditHabitScreen() {
     return (
       <SafeAreaView style={styles.root}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading habit...</Text>
+          <Text style={styles.loadingText}>SYNCING PROTOCOL...</Text>
         </View>
       </SafeAreaView>
     );
@@ -145,35 +148,43 @@ export default function EditHabitScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>← Cancel</Text>
+        <MotiView 
+          from={{ opacity: 0, translateY: -10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          style={styles.header}
+        >
+          <Pressable 
+            onPress={() => { playSound('UNCHECK', 0.1); router.back(); }} 
+            style={styles.backButton}
+          >
+            <ActionIcons.Close size={20} color={TEXT_MUTED} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit Habit</Text>
+          <Text style={styles.headerTitle}>PROTOCOL_MOD</Text>
           <Pressable
             onPress={handleSave}
             disabled={saving || !name.trim()}
             style={[styles.saveButton, (!name.trim() || saving) && styles.saveButtonDisabled]}
           >
             <Text style={styles.saveButtonText}>
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'VETTING...' : 'DEPLOY'}
             </Text>
           </Pressable>
-        </View>
+        </MotiView>
 
         {/* Form */}
-        <View style={styles.form}>
+        <MotiView 
+          from={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 400 }}
+          style={styles.form}
+        >
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Habit Name</Text>
-            <TextInput
-              style={styles.input}
+            <PremiumInput
+              label="PROTOCOL IDENTIFIER"
               value={name}
               onChangeText={setName}
-              placeholder="e.g., Morning meditation"
-              placeholderTextColor={TEXT_MUTED}
+              placeholder="e.g., DEEP_WORK_BLOCK"
               autoFocus
-              returnKeyType="done"
-              onSubmitEditing={handleSave}
             />
           </View>
 
@@ -183,7 +194,10 @@ export default function EditHabitScreen() {
               styles.toggleCard,
               isNonNegotiable && styles.toggleCardActive,
             ]}
-            onPress={() => setIsNonNegotiable(!isNonNegotiable)}
+            onPress={() => {
+              playSound('CHECK', 0.15);
+              setIsNonNegotiable(!isNonNegotiable);
+            }}
           >
             <View style={styles.toggleInfo}>
               <View style={styles.toggleHeader}>
@@ -191,7 +205,7 @@ export default function EditHabitScreen() {
                   styles.toggleTitle,
                   isNonNegotiable && styles.toggleTitleActive,
                 ]}>
-                  Non-Negotiable
+                  CORE PROTOCOL
                 </Text>
                 <View style={[
                   styles.toggle,
@@ -204,31 +218,34 @@ export default function EditHabitScreen() {
                 </View>
               </View>
               <Text style={styles.toggleDescription}>
-                Missing this habit adds 10 points of identity debt. 
-                Non-negotiables have 2x weight in scoring.
+                DEBT RISK: MISSING THIS PROTOCOL ADDS 10 POINTS TO IDENTITY DEBT. 
+                SCORE MULTIPLIER: 2X IMPACT ON ALIGNMENT.
               </Text>
             </View>
           </Pressable>
 
           {/* Weight Info */}
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>Current Weight</Text>
+            <Text style={styles.infoLabel}>SYSTEM IMPACT</Text>
             <Text style={styles.infoValue}>
-              {isNonNegotiable ? '2x (Non-Negotiable)' : '1x (Standard)'}
+              {isNonNegotiable ? '2X MULTIPLIER' : '1X MULTIPLIER'}
             </Text>
             <Text style={styles.infoHint}>
-              Non-negotiable habits count double in your Identity Alignment Score.
+              PROBABILITY MATRIX: CORE PROTOCOLS HAVE DOUBLE THE STATISTICAL WEIGHT IN IDENTITY MEASUREMENT.
             </Text>
           </View>
 
           {/* Delete Button */}
-          <Pressable style={styles.deleteButton} onPress={handleDelete}>
-            <Text style={styles.deleteButtonText}>Delete Habit</Text>
+          <Pressable 
+            style={styles.deleteButton} 
+            onPress={handleDelete}
+          >
+            <Text style={styles.deleteButtonText}>TERMINATE PROTOCOL</Text>
           </Pressable>
           <Text style={styles.deleteHint}>
-            This will remove all historical data for this habit.
+            WARNING: PERMANENT SYSTEM DELETION. ALL HISTORICAL CORRELATIONS WILL BE LOST.
           </Text>
-        </View>
+        </MotiView>
       </ScrollView>
     </SafeAreaView>
   );
@@ -250,36 +267,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
     paddingTop: 8,
   },
   backButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  backButtonText: {
-    color: TEXT_SECONDARY,
-    fontSize: 15,
-    fontWeight: '600',
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   headerTitle: {
-    color: TEXT_PRIMARY,
-    fontSize: 18,
-    fontWeight: '700',
+    color: GOLD,
+    fontSize: 14,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 4,
   },
   saveButton: {
     backgroundColor: GOLD,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 8,
   },
   saveButtonDisabled: {
     opacity: 0.5,
   },
   saveButtonText: {
-    color: BASE,
-    fontSize: 14,
-    fontWeight: '700',
+    color: '#0A0A0A',
+    fontSize: 11,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 2,
   },
 
   // Loading
@@ -290,45 +312,28 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: TEXT_MUTED,
-    fontSize: 15,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 2,
   },
 
   // Form
   form: {
-    gap: 20,
+    gap: 24,
   },
 
   // Input
   inputGroup: {
     marginBottom: 8,
   },
-  label: {
-    color: TEXT_SECONDARY,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    fontFamily: 'ui-monospace',
-  },
-  input: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: TEXT_PRIMARY,
-    fontSize: 16,
-  },
 
   // Toggle Card
   toggleCard: {
-    backgroundColor: SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 16,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 20,
   },
   toggleCardActive: {
     borderColor: GOLD,
@@ -341,22 +346,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   toggleTitle: {
     color: TEXT_PRIMARY,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 1,
     flex: 1,
   },
   toggleTitleActive: {
     color: GOLD,
   },
   toggle: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: BORDER,
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     padding: 2,
   },
@@ -364,9 +371,9 @@ const styles = StyleSheet.create({
     backgroundColor: GOLD,
   },
   toggleKnob: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: SURFACE,
   },
   toggleKnobActive: {
@@ -374,58 +381,64 @@ const styles = StyleSheet.create({
   },
   toggleDescription: {
     color: TEXT_SECONDARY,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 11,
+    lineHeight: 18,
+    fontFamily: 'ui-monospace',
   },
 
   // Info Card
   infoCard: {
-    backgroundColor: SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.01)',
     borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 16,
+    borderColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    padding: 20,
   },
   infoLabel: {
     color: GOLD,
     fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 8,
+    fontWeight: '900',
+    letterSpacing: 2,
     fontFamily: 'ui-monospace',
+    marginBottom: 12,
   },
   infoValue: {
     color: TEXT_PRIMARY,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 8,
+    fontFamily: 'ui-monospace',
   },
   infoHint: {
     color: TEXT_MUTED,
-    fontSize: 12,
+    fontSize: 11,
     lineHeight: 18,
+    fontFamily: 'ui-monospace',
   },
 
   // Delete
   deleteButton: {
-    backgroundColor: RED_SUBTLE,
+    backgroundColor: 'rgba(204, 0, 0, 0.05)',
     borderWidth: 1,
-    borderColor: RED,
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderColor: 'rgba(204, 0, 0, 0.2)',
+    borderRadius: 8,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
   deleteButtonText: {
     color: RED,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 2,
   },
   deleteHint: {
     color: TEXT_MUTED,
-    fontSize: 12,
+    fontSize: 10,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 16,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 0.5,
   },
 });
