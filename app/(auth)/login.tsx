@@ -127,6 +127,13 @@ export default function LoginScreen() {
             <Text style={styles.primaryButtonText}>{loading ? 'Authenticating...' : 'Authenticate'}</Text>
           </Pressable>
 
+          <Pressable
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push('/(auth)/reset-password' as never)}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </Pressable>
+
           <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
             <Text style={styles.linkText}>No identity profile? Establish one here.</Text>
           </Pressable>
@@ -231,6 +238,15 @@ const styles = StyleSheet.create({
     color: BASE,
     fontSize: 16,
     fontWeight: '700',
+  },
+  forgotPasswordButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    color: GOLD,
+    fontSize: 14,
+    fontWeight: '600',
   },
   linkButton: {
     marginTop: 24,

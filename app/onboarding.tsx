@@ -33,9 +33,10 @@ interface OnboardingData {
   refuse_to_be: string;
   non_negotiables: [string, string, string];
   tone_preference: TonePreference;
+  reckoning_time: string; // HH:MM format
 }
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function OnboardingScreen() {
     refuse_to_be: '',
     non_negotiables: ['', '', ''],
     tone_preference: 'analytical',
+    reckoning_time: '20:00', // Default to 8 PM
   });
 
   const animateTransition = (callback: () => void) => {
@@ -81,6 +83,7 @@ export default function OnboardingScreen() {
         identity_claim: data.identity_claim,
         refuse_to_be: data.refuse_to_be,
         tone_preference: data.tone_preference,
+        reckoning_time: data.reckoning_time,
       });
 
       if (userError) throw userError;
@@ -179,7 +182,14 @@ export default function OnboardingScreen() {
             onNext={goNext}
           />
         )}
-        {step === 5 && <CompletionStep data={data} onComplete={handleComplete} saving={saving} />}
+        {step === 5 && (
+          <TimePickerStep
+            value={data.reckoning_time}
+            onChange={(v) => setData({ ...data, reckoning_time: v })}
+            onNext={goNext}
+          />
+        )}
+        {step === 6 && <CompletionStep data={data} onComplete={handleComplete} saving={saving} />}
       </Animated.View>
     </View>
   );
@@ -358,7 +368,7 @@ function ToneStep({
 }) {
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepLabel}>04 / 04</Text>
+      <Text style={styles.stepLabel}>04 / 05</Text>
       <Text style={styles.stepHeading}>How should I speak to you?</Text>
       <Text style={styles.stepSubtext}>
         Choose how your weekly Reckoning is delivered. You can change this later.
@@ -389,7 +399,76 @@ function ToneStep({
       </Pressable>
 
       <Pressable style={styles.primaryButton} onPress={onNext}>
-        <Text style={styles.primaryButtonText}>Set Tone</Text>
+        <Text style={styles.primaryButtonText}>Continue</Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+function TimePickerStep({
+  value,
+  onChange,
+  onNext,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onNext: () => void;
+}) {
+  const [hours, minutes] = value.split(':').map(Number);
+  
+  const adjustTime = (deltaHours: number) => {
+    let newHours = hours + deltaHours;
+    if (newHours < 0) newHours = 23;
+    if (newHours >= 24) newHours = 0;
+    onChange(`${newHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+  };
+
+  const formatDisplayTime = (timeStr: string) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayHours = h % 12 || 12;
+    return `${displayHours}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
+      <Text style={styles.stepLabel}>05 / 05</Text>
+      <Text style={styles.stepHeading}>When is your Reckoning?</Text>
+      <Text style={styles.stepSubtext}>
+        Choose what time every Sunday you want to receive your Weekly Reckoning.
+      </Text>
+
+      <View style={styles.timePickerContainer}>
+        <Text style={styles.timePickerLabel}>Sunday Delivery Time</Text>
+        
+        <View style={styles.timePickerControls}>
+          <Pressable
+            style={styles.timeButton}
+            onPress={() => adjustTime(-1)}
+          >
+            <Text style={styles.timeButtonText}>−</Text>
+          </Pressable>
+
+          <View style={styles.timeDisplay}>
+            <Text style={styles.timeValue}>{formatDisplayTime(value)}</Text>
+            <Text style={styles.timeSubtext}>Every Sunday</Text>
+          </View>
+
+          <Pressable
+            style={styles.timeButton}
+            onPress={() => adjustTime(1)}
+          >
+            <Text style={styles.timeButtonText}>+</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.timeHint}>
+          This can be changed later in Settings
+        </Text>
+      </View>
+
+      <Pressable style={styles.primaryButton} onPress={onNext}>
+        <Text style={styles.primaryButtonText}>Continue</Text>
       </Pressable>
     </ScrollView>
   );
@@ -404,6 +483,13 @@ function CompletionStep({
   onComplete: () => void;
   saving?: boolean;
 }) {
+  const formatDisplayTime = (timeStr: string) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayHours = h % 12 || 12;
+    return `${displayHours}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.checkCircle}>
@@ -437,6 +523,13 @@ function CompletionStep({
         <Text style={styles.summaryLabel}>Reckoning Tone</Text>
         <Text style={[styles.summaryValue, { textTransform: 'capitalize' }]}>
           {data.tone_preference}
+        </Text>
+      </View>
+
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryLabel}>Sunday Reckoning Time</Text>
+        <Text style={styles.summaryValue}>
+          {formatDisplayTime(data.reckoning_time)}
         </Text>
       </View>
 
@@ -703,5 +796,71 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
     fontSize: 14,
     lineHeight: 22,
+  },
+
+  // Time Picker
+  timePickerContainer: {
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  timePickerLabel: {
+    color: GOLD,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 20,
+    fontFamily: 'ui-monospace',
+  },
+  timePickerControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  timeButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeButtonText: {
+    color: TEXT_PRIMARY,
+    fontSize: 28,
+    fontWeight: '400',
+  },
+  timeDisplay: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  timeValue: {
+    color: TEXT_PRIMARY,
+    fontSize: 32,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 1,
+  },
+  timeSubtext: {
+    color: TEXT_MUTED,
+    fontSize: 11,
+    marginTop: 4,
+    fontFamily: 'ui-monospace',
+  },
+  timeHint: {
+    color: TEXT_MUTED,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 16,
+    lineHeight: 18,
   },
 });
