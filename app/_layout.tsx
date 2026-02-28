@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { BASE } from '@/constants/theme';
+import { ErrorBoundary } from '@/src/components/ui/ErrorBoundary';
 import { configureNotifications } from '@/src/lib/notifications';
 import { initializeRevenueCat } from '@/src/lib/payments';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -57,13 +58,15 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="light" />
-    </>
+    <ErrorBoundary>
+      <>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="light" />
+      </>
+    </ErrorBoundary>
   );
 }

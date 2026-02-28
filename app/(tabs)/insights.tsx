@@ -24,6 +24,7 @@ import {
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
+import { Skeleton, SkeletonCard } from '@/src/components/ui/Skeleton';
 import { Paywall } from '@/src/components/ui/Paywall';
 import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
 import { useSubscription } from '@/src/hooks/useSubscription';
@@ -151,6 +152,7 @@ export default function InsightsScreen() {
   }, [scoreHistory]);
 
   const hasData = scoreHistory.length > 0;
+  const isLoading = !hasData && scoreHistory.length === 0;
 
   // Calculate 30-day trend data for line chart
   const trend30DayData = useMemo(() => {
@@ -238,6 +240,15 @@ export default function InsightsScreen() {
           )}
         </View>
 
+        {/* Loading State */}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <SkeletonCard delay={0} />
+            <SkeletonCard delay={200} />
+            <SkeletonCard delay={400} />
+          </View>
+        ) : (
+          <>
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <StatCard
@@ -527,6 +538,8 @@ export default function InsightsScreen() {
           onClose={() => setShowPaywall(false)}
           onPurchase={purchasePro}
         />
+        </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -622,6 +635,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: 2,
+  },
+  loadingContainer: {
+    gap: 16,
   },
 
   statsRow: {
@@ -893,7 +909,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-  loadingContainer: {
+  loadingContainerLarge: {
     backgroundColor: SURFACE,
     borderWidth: 1,
     borderColor: BORDER,

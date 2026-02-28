@@ -8,6 +8,7 @@ import {
     StyleSheet,
     Text,
     View,
+    Platform,
 } from 'react-native';
 import { MotiView } from 'moti';
 
@@ -29,6 +30,7 @@ import { StatusIcons, ActionIcons, FeatureIcons } from '@/src/utils/icons';
 import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { useHabitStore } from '@/src/store/useHabitStore';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -67,6 +69,14 @@ export default function HomeScreen() {
       useHabitStore.getState().recalculateAndSaveScore();
     }, []),
   );
+
+  const handleToggleHabit = async (habitId: string) => {
+    // Haptic feedback
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    await toggleHabit(habitId);
+  };
 
   const habitsWithStatus = getHabitsWithStatus();
   const score = getTodayScore();
@@ -166,7 +176,7 @@ export default function HomeScreen() {
               >
                 <Pressable
                   style={[styles.habitRow, habit.completedToday && styles.habitRowCompleted]}
-                  onPress={() => toggleHabit(habit.id)}
+                  onPress={() => handleToggleHabit(habit.id)}
                   android_ripple={{ color: GOLD_SUBTLE }}
                 >
                   {/* Checkbox with animation */}
