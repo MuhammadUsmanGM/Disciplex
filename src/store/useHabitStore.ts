@@ -233,6 +233,12 @@ export const useHabitStore = create<HabitState>()(
           consecutiveHighDays: newConsecutiveHigh,
         });
 
+        // Calculate 30-day volatility for storage
+        const last30 = scoreHistory.slice(-30).map((s) => s.adjustedScore);
+        const mean = last30.reduce((a, b) => a + b, 0) / (last30.length || 1);
+        const variance = last30.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (last30.length || 1);
+        const volatility = Math.sqrt(variance);
+
         // Sync Score to Cloud
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -243,7 +249,7 @@ export const useHabitStore = create<HabitState>()(
             adjusted_score: result.adjustedScore,
             alignment_score: result.finalAlignment,
             identity_debt: newDebt,
-            volatility: 0, // Simplified for now
+            volatility: Math.round(volatility * 10) / 10,
           }, { onConflict: 'user_id,date' });
         }
       },

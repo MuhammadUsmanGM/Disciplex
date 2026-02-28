@@ -24,13 +24,13 @@ import {
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
-import { Skeleton, SkeletonCard } from '@/src/components/ui/Skeleton';
 import { Paywall } from '@/src/components/ui/Paywall';
+import { SkeletonCard } from '@/src/components/ui/Skeleton';
 import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
 import { useSubscription } from '@/src/hooks/useSubscription';
 import { detectBottleneck } from '@/src/lib/scoring';
-import { useHabitStore } from '@/src/store/useHabitStore';
 import { supabase } from '@/src/lib/supabase';
+import { useHabitStore } from '@/src/store/useHabitStore';
 
 const BAR_MAX_HEIGHT = 80;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -144,7 +144,7 @@ export default function InsightsScreen() {
   // Current score + volatility
 
   const volatility = useMemo(() => {
-    const scores = scoreHistory.slice(-7).map((s) => s.score);
+    const scores = scoreHistory.slice(-30).map((s) => s.score);
     if (scores.length < 2) return null;
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
     const variance = scores.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / scores.length;
