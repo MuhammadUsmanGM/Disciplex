@@ -10,22 +10,19 @@ import {
 } from 'react-native';
 
 import {
-    BORDER,
-    GLASS_BORDER,
-    GLASS_SURFACE,
     GOLD,
     GOLD_SUBTLE,
     RED,
     SHADOWS,
-    SURFACE,
-    SURFACE_2,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     getScoreColor
 } from '@/constants/theme';
+import { DebtReconciliation } from '@/src/components/ui/DebtReconciliation';
 import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
+import { ActionIcons, FeatureIcons } from '@/src/utils/icons';
 
 interface OnboardingData {
   identity_claim: string;
@@ -36,7 +33,7 @@ export default function IdentityScreen() {
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [alignmentPercentage, setAlignmentPercentage] = useState<number>(0);
 
-  const { habits, getHabitsWithStatus, getLast7DayScores, debtEntries } = useHabitStore();
+  const { habits, getHabitsWithStatus, getLast7DayScores, debtEntries, identityDebt, consecutiveHighDays } = useHabitStore();
 
   // Load onboarding data from Supabase
   useFocusEffect(
@@ -81,9 +78,19 @@ export default function IdentityScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerLabel}>Identity Debt</Text>
-          <Text style={styles.headerSub}>Your contract with yourself</Text>
+           <View>
+              <Text style={styles.headerLabel}>IDENTITY LOG</Text>
+              <Text style={styles.headerSub}>BEHAVIORAL CONTRACT V.01</Text>
+           </View>
+           <View style={[styles.statusBadge, { borderColor: identityDebt > 0 ? RED : GOLD }]}>
+              <Text style={[styles.statusBadgeText, { color: identityDebt > 0 ? RED : GOLD }]}>
+                 {identityDebt > 0 ? 'BREACH DETECTED' : 'SYSTEM NOMINAL'}
+              </Text>
+           </View>
         </View>
+
+        {/* Debt Reconciliation Protocol */}
+        <DebtReconciliation debt={identityDebt} consecutiveHighDays={consecutiveHighDays} />
 
         {/* Alignment Score Card */}
         <MotiView
@@ -95,7 +102,7 @@ export default function IdentityScreen() {
             alignmentPercentage >= 75 && SHADOWS.goldGlow
           ]}
         >
-          <Text style={styles.alignmentLabel}>Current Alignment</Text>
+          <Text style={styles.alignmentLabel}>CURRENT ALIGNMENT INDEX</Text>
           <View style={styles.scoreRow}>
             <MotiView
               from={{ scale: 0.8 }}
@@ -111,11 +118,11 @@ export default function IdentityScreen() {
           <Text style={[styles.alignmentState, { color: alignmentColor }]}>
             {onboardingData
               ? alignmentPercentage >= 75
-                ? 'Aligned'
+                ? 'ALIGNED PROTOCOL'
                 : alignmentPercentage >= 50
-                ? 'Drifting'
-                : 'Identity Gap'
-              : 'Complete onboarding'}
+                ? 'DRIFT WARNING'
+                : 'CRITICAL IDENTITY GAP'
+              : 'INITIALIZING...'}
           </Text>
           <View style={styles.progressTrack}>
             <MotiView
@@ -130,37 +137,45 @@ export default function IdentityScreen() {
               ]}
             />
           </View>
-          <Text style={styles.progressHint}>7-day weighted average</Text>
+          <Text style={styles.progressHint}>7-DAY BEHAVIORAL WINDOW</Text>
         </MotiView>
 
         {/* Identity Claim */}
         {onboardingData && (
           <>
             <View style={styles.card}>
-              <Text style={styles.cardLabel}>Identity Claim</Text>
-              <Text style={styles.cardValue}>{onboardingData.identity_claim}</Text>
+              <View style={styles.cardHeader}>
+                 <FeatureIcons.Target size={14} color={GOLD} />
+                 <Text style={styles.cardLabel}>IDENTITY CLAIM</Text>
+              </View>
+              <Text style={styles.cardValue}>&quot;{onboardingData.identity_claim}&quot;</Text>
+              <View style={styles.cardDivider} />
               <Text style={styles.cardHint}>
-                This is your standard — not a wish. Every action is a vote for or against this
-                identity.
+                Every action is a vote for this version of you.
               </Text>
             </View>
 
             {/* Who I Refuse To Be */}
             <View style={[styles.card, styles.dangerCard]}>
-              <Text style={[styles.cardLabel, styles.dangerLabel]}>
-                Who I Refuse To Be
-              </Text>
-              <Text style={styles.dangerValue}>{onboardingData.refuse_to_be}</Text>
+              <View style={styles.cardHeader}>
+                 <FeatureIcons.Alert size={14} color={RED} />
+                 <Text style={[styles.cardLabel, styles.dangerLabel]}>REFUSE PROTOCOL</Text>
+              </View>
+              <Text style={styles.dangerValue}>&quot;{onboardingData.refuse_to_be}&quot;</Text>
+              <View style={styles.cardDividerDanger} />
               <Text style={styles.dangerHint}>
-                Every missed non-negotiable is a vote for this version of you.
+                BREACH WARNING: Missing non-negotiables validates this entry.
               </Text>
             </View>
 
             {/* Non-Negotiables */}
             <View style={styles.card}>
-              <Text style={styles.cardLabel}>Non-Negotiables</Text>
+              <View style={styles.cardHeader}>
+                 <FeatureIcons.Settings size={14} color={GOLD} />
+                 <Text style={styles.cardLabel}>NON-NEGOTIABLES</Text>
+              </View>
               <Text style={styles.nonNegotiablesHint}>
-                These 3 behaviors define your identity. Miss one — you pay for it.
+                These core behaviors define your identity integrity.
               </Text>
 
               {habits.map((habit, i) => {
@@ -176,14 +191,14 @@ export default function IdentityScreen() {
                       ]}
                     />
                     <View style={styles.habitInfo}>
-                      <Text style={styles.habitName}>{habit.name}</Text>
+                      <Text style={styles.habitName}>{habit.name.toUpperCase()}</Text>
                       <Text
                         style={[
                           styles.habitStatus,
                           isCompleted ? styles.habitStatusDone : styles.habitStatusMissed,
                         ]}
                       >
-                        {isCompleted ? 'Completed today' : 'Not completed'}
+                        {isCompleted ? 'EXECUTED' : 'PENDING'}
                       </Text>
                     </View>
                   </View>
@@ -193,10 +208,13 @@ export default function IdentityScreen() {
 
             {/* Today's Progress */}
             <View style={styles.card}>
-              <Text style={styles.cardLabel}>Today&apos;s Execution</Text>
+               <View style={styles.cardHeader}>
+                 <FeatureIcons.Target size={14} color={GOLD} />
+                 <Text style={styles.cardLabel}>TODAY&apos;S ALIGNMENT</Text>
+              </View>
               <View style={styles.progressRow}>
                 <Text style={styles.progressText}>
-                  {completedCount} of {habits.length} completed
+                  {completedCount} OF {habits.length} PROTOCOLS EXECUTED
                 </Text>
                 <Text style={[styles.progressPercent, { color: getScoreColor((completedCount / habits.length) * 100) }]}>
                   {habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0}%
@@ -215,32 +233,41 @@ export default function IdentityScreen() {
               </View>
             </View>
 
-            {/* Penalty Ledger */}
+            {/* Integrity Audit Log */}
             <View style={styles.card}>
               <View style={styles.ledgerHeader}>
-                <Text style={styles.cardLabel}>Identity Penalty Ledger</Text>
-                <Text style={styles.ledgerSub}>History of drift & discipline</Text>
+                <View style={styles.cardHeader}>
+                   <ActionIcons.History size={14} color={GOLD} />
+                   <Text style={styles.cardLabel}>INTEGRITY AUDIT LOG</Text>
+                </View>
+                <Text style={styles.ledgerSub}>LAST 50 TRANSACTIONAL EVENTS</Text>
               </View>
               
               {debtEntries.length === 0 ? (
-                <Text style={styles.emptyLedgerText}>No entries in the ledger. Your record is clean.</Text>
+                <Text style={styles.emptyLedgerText}>NO NEGATIVE TRANSFERS DETECTED.</Text>
               ) : (
                 <View style={styles.ledgerList}>
                   {debtEntries.map((entry) => (
-                    <View key={entry.id} style={styles.ledgerRow}>
+                    <MotiView 
+                      key={entry.id} 
+                      animate={{ opacity: entry.amount > 0 ? [1, 0.6, 1] : 1 }}
+                      transition={{ type: 'timing', duration: 1500, loop: entry.amount > 0 }}
+                      style={styles.ledgerRow}
+                    >
+                      <View style={[styles.ledgerMarker, { backgroundColor: entry.amount > 0 ? RED : GOLD }]} />
                       <View style={styles.ledgerInfo}>
                         <Text style={styles.ledgerDate}>
                           {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </Text>
-                        <Text style={styles.ledgerLabel}>{entry.label}</Text>
+                        <Text style={styles.ledgerLabel}>{entry.label.toUpperCase()}</Text>
                       </View>
                       <Text style={[
                         styles.ledgerAmount,
                         { color: entry.amount > 0 ? RED : GOLD }
                       ]}>
-                        {entry.amount > 0 ? `+${entry.amount}` : entry.amount} pts
+                        {entry.amount > 0 ? `+${entry.amount}` : entry.amount} UNIT
                       </Text>
-                    </View>
+                    </MotiView>
                   ))}
                 </View>
               )}
@@ -249,7 +276,7 @@ export default function IdentityScreen() {
             {/* Contract Reminder */}
             <View style={styles.reminderCard}>
               <Text style={styles.reminderText}>
-                Your identity is not what you say. It is what you prove — daily.
+                IDENTITY IS NOT STATED. IT IS PROVEN.
               </Text>
             </View>
           </>
@@ -258,8 +285,7 @@ export default function IdentityScreen() {
         {!onboardingData && (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyText}>
-              No identity data found. Please complete onboarding to set your identity claim and
-              non-negotiables.
+              INITIALIZING IDENTITY...
             </Text>
           </View>
         )}
@@ -284,39 +310,53 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
   headerLabel: {
-    color: TEXT_PRIMARY,
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+    color: GOLD,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 4,
+    fontFamily: 'ui-monospace',
   },
   headerSub: {
-    color: TEXT_SECONDARY,
-    fontSize: 14,
+    color: TEXT_MUTED,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 1,
     marginTop: 4,
+  },
+  statusBadge: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
   },
 
   // Alignment Card
   alignmentCard: {
-    backgroundColor: GLASS_SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: 16,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
     padding: 24,
     marginBottom: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
   },
   alignmentLabel: {
     color: TEXT_MUTED,
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 1.5,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 2,
     textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
     marginBottom: 12,
@@ -328,20 +368,21 @@ const styles = StyleSheet.create({
   },
   scoreNumber: {
     fontSize: 72,
-    fontWeight: '700',
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
-    letterSpacing: -3,
+    letterSpacing: -4,
   },
   scorePercent: {
     fontSize: 24,
     color: TEXT_SECONDARY,
     fontFamily: 'ui-monospace',
     marginLeft: 4,
+    fontWeight: '900',
   },
   alignmentState: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 2.5,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 2,
     textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
     marginTop: 4,
@@ -350,7 +391,7 @@ const styles = StyleSheet.create({
   progressTrack: {
     width: '100%',
     height: 4,
-    backgroundColor: SURFACE_2,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -360,85 +401,102 @@ const styles = StyleSheet.create({
   },
   progressHint: {
     color: TEXT_MUTED,
-    fontSize: 10,
-    marginTop: 8,
+    fontSize: 9,
+    marginTop: 12,
     fontFamily: 'ui-monospace',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 
   // Generic Card
   card: {
-    backgroundColor: GLASS_SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: 14,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   cardLabel: {
     color: GOLD,
     fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 1.5,
+    fontWeight: '900',
+    letterSpacing: 2,
     textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
-    marginBottom: 10,
   },
   cardValue: {
     color: TEXT_PRIMARY,
     fontSize: 16,
     lineHeight: 24,
-    marginBottom: 8,
+    fontWeight: '600',
+    fontStyle: 'italic',
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginVertical: 12,
   },
   cardHint: {
     color: TEXT_MUTED,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 10,
+    lineHeight: 16,
+    fontFamily: 'ui-monospace',
   },
 
   // Danger Card (Refuse To Be)
   dangerCard: {
-    borderColor: '#3A1A1A',
-    backgroundColor: '#0F0A0A',
+    borderColor: 'rgba(204, 0, 0, 0.2)',
+    backgroundColor: 'rgba(204, 0, 0, 0.02)',
   },
   dangerLabel: {
     color: RED,
   },
   dangerValue: {
     color: TEXT_SECONDARY,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
     fontStyle: 'italic',
+    fontWeight: '600',
+  },
+  cardDividerDanger: {
+    height: 1,
+    backgroundColor: 'rgba(204, 0, 0, 0.1)',
+    marginVertical: 12,
   },
   dangerHint: {
     color: RED,
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 6,
+    fontSize: 9,
+    lineHeight: 14,
     fontFamily: 'ui-monospace',
+    fontWeight: '800',
   },
 
   // Non-Negotiables
   nonNegotiablesHint: {
     color: TEXT_SECONDARY,
-    fontSize: 12,
+    fontSize: 11,
     lineHeight: 18,
-    marginBottom: 14,
+    marginBottom: 16,
+    fontFamily: 'ui-monospace',
   },
   habitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    borderBottomColor: 'rgba(255,255,255,0.03)',
   },
   habitIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     marginRight: 12,
   },
   habitIndicatorDone: {
@@ -452,14 +510,16 @@ const styles = StyleSheet.create({
   },
   habitName: {
     color: TEXT_PRIMARY,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '800',
     marginBottom: 2,
+    fontFamily: 'ui-monospace',
   },
   habitStatus: {
-    fontSize: 11,
+    fontSize: 9,
     fontFamily: 'ui-monospace',
-    letterSpacing: 0.3,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   habitStatusDone: {
     color: GOLD,
@@ -473,21 +533,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   progressText: {
     color: TEXT_SECONDARY,
-    fontSize: 14,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
+    fontWeight: '800',
   },
   progressPercent: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
   },
   miniProgressTrack: {
     width: '100%',
-    height: 3,
-    backgroundColor: SURFACE_2,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -496,86 +558,100 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
 
-  // Reminder
-  reminderCard: {
-    backgroundColor: GOLD_SUBTLE,
-    borderWidth: 1,
-    borderColor: GOLD,
-    borderRadius: 12,
-    padding: 18,
-    marginTop: 8,
-  },
-  reminderText: {
-    color: TEXT_SECONDARY,
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: 'center',
-    fontFamily: 'ui-monospace',
-    letterSpacing: 0.5,
-  },
-
-  // Empty State
-  emptyCard: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 24,
-    marginTop: 20,
-  },
-  emptyText: {
-    color: TEXT_SECONDARY,
-    fontSize: 14,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
   // Ledger
   ledgerHeader: {
     marginBottom: 16,
   },
   ledgerSub: {
     color: TEXT_MUTED,
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: 'ui-monospace',
-    letterSpacing: 0.5,
-    marginTop: -4,
+    letterSpacing: 1.5,
+    marginTop: 4,
+    fontWeight: '800',
   },
   ledgerList: {
-    gap: 12,
+    gap: 8,
   },
   ledgerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    borderBottomColor: 'rgba(255,255,255,0.03)',
+  },
+  ledgerMarker: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginRight: 12,
   },
   ledgerInfo: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   ledgerDate: {
     color: TEXT_MUTED,
-    fontSize: 10,
+    fontSize: 8,
     fontFamily: 'ui-monospace',
     textTransform: 'uppercase',
+    fontWeight: '800',
   },
   ledgerLabel: {
     color: TEXT_PRIMARY,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: 'ui-monospace',
   },
   ledgerAmount: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
   },
   emptyLedgerText: {
     color: TEXT_MUTED,
-    fontSize: 13,
+    fontSize: 11,
     textAlign: 'center',
-    paddingVertical: 20,
-    fontStyle: 'italic',
+    paddingVertical: 24,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 1,
+  },
+
+  // Reminder Card
+  reminderCard: {
+    backgroundColor: GOLD_SUBTLE,
+    borderWidth: 1,
+    borderColor: GOLD,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  reminderText: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 3,
+    textAlign: 'center',
+  },
+
+  // Empty State
+  emptyCard: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 40,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: TEXT_SECONDARY,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
+    fontWeight: '800',
+    letterSpacing: 2,
   },
 });

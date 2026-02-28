@@ -5,6 +5,7 @@
 
 import {
     Activity,
+    AlertCircle,
     BarChart3,
     Bell,
     BellRing,
@@ -14,6 +15,7 @@ import {
     Clock,
     Crown,
     Flame,
+    History,
     Home,
     Lock,
     LogOut,
@@ -105,6 +107,9 @@ export const ActionIcons = {
   Unlock: ({ size = ICON_SIZES.md, color = ICON_COLORS.gold }: IconProps) => (
     <Shield size={size} color={color} strokeWidth={2} />
   ),
+  History: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
+    <History size={size} color={color} strokeWidth={2} />
+  ),
 };
 
 // Status Icons
@@ -145,6 +150,12 @@ export const FeatureIcons = {
   ),
   Star: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
     <Star size={size} color={color} strokeWidth={2} />
+  ),
+  Alert: ({ size = ICON_SIZES.lg, color = ICON_COLORS.red }: IconProps) => (
+    <AlertCircle size={size} color={color} strokeWidth={2} />
+  ),
+  Settings: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Settings size={size} color={color} strokeWidth={2} />
   ),
 };
 
