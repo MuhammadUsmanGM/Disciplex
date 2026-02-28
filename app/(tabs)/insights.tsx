@@ -1,31 +1,32 @@
+import { useSound } from '@/src/hooks/useSound';
 import { useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useSound } from '@/src/hooks/useSound';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import {
-    BORDER,
-    GOLD,
-    RED,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    getScoreColor
+  BORDER,
+  GOLD,
+  RED,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  getScoreColor
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
 import { IdentityIntegrity } from '@/src/components/ui/IdentityIntegrity';
 import { Paywall } from '@/src/components/ui/Paywall';
 import { SkeletonCard } from '@/src/components/ui/Skeleton';
+import { TypewriterText } from '@/src/components/ui/TypewriterText';
 import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
 import { useSubscription } from '@/src/hooks/useSubscription';
 import { detectBottleneck } from '@/src/lib/scoring';
@@ -237,11 +238,17 @@ export default function InsightsScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.headerLabel}>COMMAND CENTER</Text>
-            <Text style={styles.headerSub}>IDENTITY DIAGNOSTICS // LOG V.01</Text>
+            <Text style={styles.headerSub}>IDENTITY DIAGNOSTICS // PROTOCOL V.01</Text>
           </View>
-          {hasData && (
-             <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} isPro={isPro} />
-          )}
+          <View style={styles.headerActions}>
+            <View style={styles.systemStatusBadge}>
+               <View style={styles.statusDot} />
+               <Text style={styles.statusText}>STATUS: NOMINAL</Text>
+            </View>
+            {hasData && (
+               <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} isPro={isPro} />
+            )}
+          </View>
         </View>
 
         {/* Loading State */}
@@ -255,21 +262,26 @@ export default function InsightsScreen() {
           <>
         {/* Diagnostic Grid */}
         <View style={styles.diagnosticGrid}>
-           <View style={styles.primaryDiag}>
+           <MotiView 
+             from={{ opacity: 0, scale: 0.95 }}
+             animate={{ opacity: 1, scale: 1 }}
+             style={styles.primaryDiag}
+           >
               <IdentityIntegrity score={weekScore} />
-           </View>
+              <Text style={styles.primaryLabel}>INTEGRITY_INDEX</Text>
+           </MotiView>
            <View style={styles.secondaryDiag}>
               <StatCard
-                label="Stability Index"
+                label="STABILITY_INDEX"
                 value={stabilityIndex != null ? `${stabilityIndex}%` : '—'}
                 sub={
                   stabilityIndex == null
                     ? undefined
                     : stabilityIndex > 80
-                    ? 'OPTIMIZED'
+                    ? 'OPTIMIZED_VECTOR'
                     : stabilityIndex > 60
-                    ? 'NOMINAL'
-                    : 'VOLATILE'
+                    ? 'STEADY_STATE'
+                    : 'VOLATILE_BREACH'
                 }
                 subColor={
                   stabilityIndex == null
@@ -282,9 +294,9 @@ export default function InsightsScreen() {
                 }
               />
               <StatCard
-                label="Growth Vector"
+                label="GROWTH_VECTOR"
                 value={trend?.delta != null ? `${trend.delta >= 0 ? '+' : ''}${trend.delta}%` : '—'}
-                sub="W/W TREND"
+                sub="DELTA_VARIANCE"
                 subColor={trend?.delta != null ? (trend.delta >= 0 ? GOLD : RED) : undefined}
               />
            </View>
@@ -297,8 +309,18 @@ export default function InsightsScreen() {
           transition={{ type: 'timing', duration: 800, delay: 100 }}
           style={styles.card}
         >
-          <Text style={styles.cardLabel}>EXECUTION HISTOGRAM — 7 DAYS</Text>
+          <View style={styles.cardHeader}>
+             <Text style={styles.cardLabel}>EXECUTION_HISTOGRAM — 7_DAY_CYCLE</Text>
+             <Text style={styles.verText}>V.01</Text>
+          </View>
           <View style={styles.chart}>
+             {/* Scanner line for the chart */}
+             <MotiView
+               from={{ translateY: 0 }}
+               animate={{ translateY: BAR_MAX_HEIGHT }}
+               transition={{ type: 'timing', duration: 4000, loop: true }}
+               style={styles.scannerLine}
+             />
             {barData.map((item, i) => {
               const hasScore = item.score !== null;
               const height = hasScore
@@ -445,12 +467,19 @@ export default function InsightsScreen() {
           {bottleneck ? (
             <View>
               <Text style={styles.bottleneckName}>{bottleneck.habitName.toUpperCase()}</Text>
-              <Text style={styles.bottleneckDetail}>
-                Completion rate at {Math.round(bottleneck.completionRate * 100)}%. Failure in this behavior correlates with a systematic drop in daily alignment.
-              </Text>
-              <Text style={styles.bottleneckVerdict}>
-                [ ACTION REQUIRED: RESTRUCTURE PROTOCOL ]
-              </Text>
+              <TypewriterText 
+                text={`COMPLETION RATE AT ${Math.round(bottleneck.completionRate * 100)}%. FAILURE IN THIS BEHAVIOR CORRELATES WITH A SYSTEMATIC DROP IN DAILY ALIGNMENT.`}
+                speed={20}
+                style={styles.bottleneckDetail}
+              />
+              <MotiView
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ type: 'timing', duration: 800, loop: true }}
+              >
+                <Text style={styles.bottleneckVerdict}>
+                  [ CRITICAL ERROR: RESTRUCTURE PROTOCOL ]
+                </Text>
+              </MotiView>
             </View>
           ) : (
             <Text style={styles.emptyText}>
@@ -614,19 +643,124 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: 'transparent' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
-  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)', paddingBottom: 16 },
-  headerLabel: { color: GOLD, fontSize: 14, fontWeight: '900', letterSpacing: 4, fontFamily: 'ui-monospace' },
-  headerSub: { color: TEXT_MUTED, fontSize: 10, fontFamily: 'ui-monospace', letterSpacing: 1, marginTop: 4 },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 24, 
+    borderBottomWidth: 1, 
+    borderBottomColor: 'rgba(255,255,255,0.03)', 
+    paddingBottom: 16 
+  },
+  headerLabel: { 
+    color: GOLD, 
+    fontSize: 16, 
+    fontWeight: '900', 
+    letterSpacing: 4, 
+    fontFamily: 'ui-monospace' 
+  },
+  headerSub: { 
+    color: TEXT_MUTED, 
+    fontSize: 10, 
+    fontFamily: 'ui-monospace', 
+    letterSpacing: 1.5, 
+    marginTop: 4 
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  systemStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(42, 122, 75, 0.1)',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(42, 122, 75, 0.3)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2A7A4B',
+  },
+  statusText: {
+    color: '#2A7A4B',
+    fontSize: 8,
+    fontFamily: 'ui-monospace',
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
   loadingContainer: { gap: 16 },
   diagnosticGrid: { flexDirection: 'row', gap: 12, marginBottom: 20, height: 160 },
-  primaryDiag: { flex: 1.2, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  primaryDiag: { 
+    flex: 1.2, 
+    backgroundColor: 'rgba(255,255,255,0.02)', 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.05)', 
+    borderRadius: 12, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  primaryLabel: {
+    position: 'absolute',
+    bottom: 12,
+    color: TEXT_MUTED,
+    fontSize: 8,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 2,
+    fontWeight: '800',
+  },
   secondaryDiag: { flex: 1, gap: 12 },
-  card: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 20, marginBottom: 16 },
-  cardDanger: { borderColor: 'rgba(204, 0, 0, 0.2)', backgroundColor: 'rgba(204, 0, 0, 0.02)' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  card: { 
+    backgroundColor: 'rgba(255,255,255,0.02)', 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.05)', 
+    borderRadius: 8, 
+    padding: 20, 
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  cardDanger: { 
+    borderColor: 'rgba(204, 0, 0, 0.3)', 
+    backgroundColor: 'rgba(204, 0, 0, 0.03)' 
+  },
+  cardHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
+  verText: {
+    color: TEXT_MUTED,
+    fontSize: 8,
+    fontFamily: 'ui-monospace',
+    fontWeight: '800',
+  },
   statusIndicator: { width: 4, height: 4, borderRadius: 2 },
-  cardLabel: { color: GOLD, fontSize: 10, fontWeight: '900', letterSpacing: 2, fontFamily: 'ui-monospace' },
-  chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: BAR_MAX_HEIGHT + 20 },
+  cardLabel: { 
+    color: GOLD, 
+    fontSize: 10, 
+    fontWeight: '900', 
+    letterSpacing: 2, 
+    fontFamily: 'ui-monospace' 
+  },
+  scannerLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(201, 168, 76, 0.2)',
+    zIndex: 10,
+  },
+  chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: BAR_MAX_HEIGHT + 20, position: 'relative' },
   barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
   barTrack: { height: BAR_MAX_HEIGHT, justifyContent: 'flex-end', width: '50%', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 2 },
   bar: { width: '100%', borderRadius: 2, minHeight: 4 },
@@ -634,15 +768,18 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: 'ui-monospace',
     marginTop: 4,
+    fontWeight: '700',
   },
   barDay: { color: TEXT_MUTED, fontSize: 8, fontFamily: 'ui-monospace', marginTop: 8, fontWeight: '700' },
   barDayToday: { color: GOLD },
-  emptyChart: { color: TEXT_MUTED, fontSize: 13, textAlign: 'center', marginTop: 8 },
+  emptyChart: { color: TEXT_MUTED, fontSize: 13, textAlign: 'center', marginTop: 8, fontFamily: 'ui-monospace' },
+  
   // 30-Day Trend Chart
   trendChart: {
     height: 120,
     position: 'relative',
-    marginBottom: 12,
+    marginBottom: 20,
+    paddingTop: 20,
   },
   trendPoint: {
     position: 'absolute',
@@ -650,29 +787,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   trendLine: {
     position: 'absolute',
     height: 1,
-    backgroundColor: BORDER,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     transformOrigin: 'left center',
   },
   trendScore: {
-    fontSize: 11,
+    fontSize: 8,
     fontFamily: 'ui-monospace',
-    marginTop: 4,
-    fontWeight: '600',
+    marginTop: 6,
+    fontWeight: '800',
   },
   trendLegend: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    paddingTop: 8,
+    justifyContent: 'space-between',
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: BORDER,
+    borderTopColor: 'rgba(255,255,255,0.03)',
   },
   legendItem: {
     flexDirection: 'row',
@@ -680,68 +816,76 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   legendText: {
     color: TEXT_MUTED,
-    fontSize: 10,
+    fontSize: 8,
     fontFamily: 'ui-monospace',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
+
   // Most missed
   missedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   missedDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 2,
+    height: 20,
     backgroundColor: RED,
   },
   missedName: {
     color: TEXT_PRIMARY,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: 1,
   },
   missedSub: {
     color: TEXT_SECONDARY,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 10,
+    marginTop: 4,
+    fontFamily: 'ui-monospace',
   },
   missedCount: {
     color: RED,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
   },
-  bottleneckName: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '900', marginBottom: 8, fontFamily: 'ui-monospace' },
-  bottleneckDetail: { color: TEXT_SECONDARY, fontSize: 13, lineHeight: 20, marginBottom: 12 },
-  bottleneckVerdict: { color: RED, fontSize: 11, fontFamily: 'ui-monospace', fontWeight: '800' },
-  emptyText: { color: TEXT_MUTED, fontSize: 12, lineHeight: 18, fontFamily: 'ui-monospace' },
+  bottleneckName: { color: TEXT_PRIMARY, fontSize: 15, fontWeight: '900', marginBottom: 8, fontFamily: 'ui-monospace', letterSpacing: 1 },
+  bottleneckDetail: { color: TEXT_SECONDARY, fontSize: 11, lineHeight: 18, marginBottom: 12, fontFamily: 'ui-monospace' },
+  bottleneckVerdict: { color: RED, fontSize: 10, fontFamily: 'ui-monospace', fontWeight: '900', letterSpacing: 1 },
+  emptyText: { color: TEXT_MUTED, fontSize: 10, lineHeight: 16, fontFamily: 'ui-monospace', letterSpacing: 0.5 },
+  
   reckoningSection: { marginTop: 12, marginBottom: 20 },
-  reckoningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  reckoningTitle: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '900', letterSpacing: 2, marginBottom: 4, fontFamily: 'ui-monospace' },
-  reckoningSubtitle: { color: TEXT_SECONDARY, fontSize: 11, letterSpacing: 1, fontFamily: 'ui-monospace' },
-  proBadge: { backgroundColor: GOLD, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  proBadgeText: { color: '#0A0A0A', fontSize: 9, fontWeight: '900', letterSpacing: 1, fontFamily: 'ui-monospace' },
-  lockedReckoning: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  lockedContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  lockIcon: { fontSize: 28 },
-  lockedTitle: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '900', marginBottom: 2, fontFamily: 'ui-monospace' },
-  lockedSubtitle: { color: TEXT_SECONDARY, fontSize: 11, lineHeight: 16, fontFamily: 'ui-monospace' },
-  upgradeButton: { backgroundColor: GOLD, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 },
-  upgradeButtonText: { color: '#0A0A0A', fontSize: 11, fontWeight: '900', fontFamily: 'ui-monospace' },
-  generateButton: { backgroundColor: GOLD, borderRadius: 8, paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  generateButtonText: { color: '#0A0A0A', fontSize: 14, fontWeight: '900', letterSpacing: 2, fontFamily: 'ui-monospace' },
-  loadingContainerLarge: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 40, alignItems: 'center' },
-  loadingText: { color: GOLD, fontSize: 11, marginTop: 16, fontFamily: 'ui-monospace', fontWeight: '800' },
-  errorContainer: { backgroundColor: 'rgba(204, 0, 0, 0.05)', borderWidth: 1, borderColor: RED, borderRadius: 12, padding: 24, alignItems: 'center' },
-  errorText: { color: RED, fontSize: 12, textAlign: 'center', marginBottom: 20, fontFamily: 'ui-monospace' },
-  retryButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6, paddingVertical: 12, paddingHorizontal: 24 },
-  retryButtonText: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '700', fontFamily: 'ui-monospace' },
-  newReckoningButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, paddingVertical: 16, alignItems: 'center', marginTop: 12 },
-  newReckoningButtonText: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '900', fontFamily: 'ui-monospace', letterSpacing: 2 },
+  reckoningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, borderLeftWidth: 2, borderLeftColor: GOLD, paddingLeft: 12 },
+  reckoningTitle: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '900', letterSpacing: 3, marginBottom: 4, fontFamily: 'ui-monospace' },
+  reckoningSubtitle: { color: TEXT_SECONDARY, fontSize: 10, letterSpacing: 1.5, fontFamily: 'ui-monospace' },
+  proBadge: { backgroundColor: GOLD, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 2 },
+  proBadgeText: { color: '#0A0A0A', fontSize: 9, fontWeight: '900', letterSpacing: 2, fontFamily: 'ui-monospace' },
+  
+  lockedReckoning: { backgroundColor: 'rgba(255,255,255,0.01)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  lockedContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 20 },
+  lockIcon: { fontSize: 24, opacity: 0.5 },
+  lockedTitle: { color: TEXT_PRIMARY, fontSize: 13, fontWeight: '900', marginBottom: 6, fontFamily: 'ui-monospace', letterSpacing: 1 },
+  lockedSubtitle: { color: TEXT_SECONDARY, fontSize: 10, lineHeight: 16, fontFamily: 'ui-monospace', letterSpacing: 0.5 },
+  upgradeButton: { backgroundColor: GOLD, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 4 },
+  upgradeButtonText: { color: '#0A0A0A', fontSize: 11, fontWeight: '900', fontFamily: 'ui-monospace', letterSpacing: 1 },
+  
+  generateButton: { backgroundColor: GOLD, borderRadius: 4, paddingVertical: 20, alignItems: 'center', justifyContent: 'center' },
+  generateButtonText: { color: '#0A0A0A', fontSize: 13, fontWeight: '900', letterSpacing: 3, fontFamily: 'ui-monospace' },
+  loadingContainerLarge: { backgroundColor: 'rgba(255,255,255,0.01)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 48, alignItems: 'center' },
+  loadingText: { color: GOLD, fontSize: 10, marginTop: 20, fontFamily: 'ui-monospace', fontWeight: '900', letterSpacing: 2 },
+  errorContainer: { backgroundColor: 'rgba(204, 0, 0, 0.03)', borderWidth: 1, borderColor: 'rgba(204, 0, 0, 0.2)', borderRadius: 8, padding: 24, alignItems: 'center' },
+  errorText: { color: RED, fontSize: 11, textAlign: 'center', marginBottom: 20, fontFamily: 'ui-monospace', letterSpacing: 0.5 },
+  retryButton: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 4, paddingVertical: 14, paddingHorizontal: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  retryButtonText: { color: TEXT_PRIMARY, fontSize: 11, fontWeight: '800', fontFamily: 'ui-monospace', letterSpacing: 1 },
+  newReckoningButton: { backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 4, paddingVertical: 16, alignItems: 'center', marginTop: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  newReckoningButtonText: { color: TEXT_MUTED, fontSize: 10, fontWeight: '900', fontFamily: 'ui-monospace', letterSpacing: 3 },
 });
