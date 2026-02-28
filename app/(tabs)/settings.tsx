@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 
 import {
   BASE,
@@ -23,8 +24,9 @@ import { useHabitStore } from '@/src/store/useHabitStore';
 
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const appVersion = '1.0.0';
-  const { scoreHistory } = useHabitStore();
+  const { scoreHistory, habits } = useHabitStore();
   const {
     permissionGranted,
     loading: notifLoading,
@@ -393,6 +395,16 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Preferences</Text>
 
           <View style={styles.card}>
+            <PressableRow onPress={() => router.push('/(tabs)/settings/manage-habits' as never)}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Manage Habits</Text>
+                <Text style={styles.settingHint}>
+                  {habits.length} habit{habits.length !== 1 ? 's' : ''} configured
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </PressableRow>
+            <View style={styles.separator} />
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>AI Tone</Text>
