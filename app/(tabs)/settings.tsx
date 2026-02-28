@@ -1,27 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
-  BASE,
-  BORDER,
-  GOLD,
-  RED,
-  RED_SUBTLE,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  ACCENT_COLORS,
-  AccentColor,
+    BASE,
+    BORDER,
+    GOLD,
+    RED,
+    RED_SUBTLE,
+    SURFACE,
+    SURFACE_2,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY
 } from '@/constants/theme';
 import { Paywall } from '@/src/components/ui/Paywall';
 import { ThemePicker } from '@/src/components/ui/ThemePicker';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import { useSubscription } from '@/src/hooks/useSubscription';
-import { useTheme } from '@/src/contexts/ThemeContext';
 import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -52,30 +50,36 @@ export default function SettingsScreen() {
   } = useSubscription();
 
   const [reckoningTime, setReckoningTime] = useState<string>('20:00');
+  const [identityClaim, setIdentityClaim] = useState<string>('');
+  const [refuseToBe, setRefuseToBe] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
-  // Load user's reckoning time preference
+  // Load user data
   useEffect(() => {
-    const loadReckoningTime = async () => {
+    const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          setUserEmail(user.email || '');
           const { data } = await supabase
             .from('users')
-            .select('reckoning_time')
+            .select('reckoning_time, identity_claim, refuse_to_be')
             .eq('id', user.id)
             .single();
-          if (data?.reckoning_time) {
-            setReckoningTime(data.reckoning_time);
+          if (data) {
+            if (data.reckoning_time) setReckoningTime(data.reckoning_time);
+            if (data.identity_claim) setIdentityClaim(data.identity_claim);
+            if (data.refuse_to_be) setRefuseToBe(data.refuse_to_be);
           }
         }
       } catch (error) {
-        console.error('Failed to load reckoning time:', error);
+        console.error('Failed to load user data:', error);
       }
     };
-    loadReckoningTime();
+    loadUserData();
   }, []);
 
   // Check and schedule milestone when score history changes
@@ -166,6 +170,14 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleSignOut = async () => {
+    const confirmed = confirm('Are you sure you want to sign out?');
+    if (confirmed) {
+      await supabase.auth.signOut();
+      router.replace('/(auth)/login');
+    }
+  };
+
   const handleDeleteAllData = async () => {
     const confirmed = confirm(
       'This will permanently delete all your habits, completions, and scores. This cannot be undone.',
@@ -179,6 +191,8 @@ export default function SettingsScreen() {
           'disciplex_habit_store',
         ]);
         alert('All data deleted. Restart the app to begin fresh.');
+        await supabase.auth.signOut();
+        router.replace('/(auth)/login');
       } catch (error) {
         console.error('Delete error:', error);
         alert('Failed to delete data');
@@ -202,14 +216,56 @@ export default function SettingsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerLabel}>Settings</Text>
+          <Text style={styles.headerLabel}>Profile</Text>
         </View>
 
-        {/* App Info */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Disciplex</Text>
-          <Text style={styles.versionText}>Version {appVersion}</Text>
-          <Text style={styles.tagline}>The AI Discipline Operating System</Text>
+        {/* Identity Contract Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Identity Contract</Text>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => router.push('/(tabs)/identity' as never)}
+          >
+            <View style={styles.identityCard}>
+              <View style={styles.identityHeader}>
+                <Text style={styles.identityTitle}>Current Claim</Text>
+                <Text style={styles.chevron}>View Deep Analysis ›</Text>
+              </View>
+              <Text style={styles.identityClaimText} numberOfLines={2}>
+                "{identityClaim || 'No identity claim set'}"
+              </Text>
+              <View style={styles.identityStats}>
+                 <View style={styles.statMini}>
+                    <Text style={styles.statMiniLabel}>Standards</Text>
+                    <Text style={styles.statMiniValue}>{habits.length}</Text>
+                 </View>
+                 <View style={styles.statMini}>
+                    <Text style={styles.statMiniLabel}>Debt</Text>
+                    <Text style={[styles.statMiniValue, { color: useHabitStore.getState().identityDebt > 0 ? RED : TEXT_PRIMARY }]}>
+                      {Math.round(useHabitStore.getState().identityDebt)}
+                    </Text>
+                 </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* User Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Account</Text>
+          <View style={styles.card}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Email Identity</Text>
+                <Text style={styles.settingHint}>{userEmail}</Text>
+              </View>
+            </View>
+            <View style={styles.separator} />
+            <TouchableOpacity style={styles.pressableRow} onPress={handleSignOut}>
+               <Text style={[styles.settingLabel, { color: RED }]}>Sign Out</Text>
+               <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Subscription / Pro Status */}
@@ -905,5 +961,56 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
     marginBottom: 8,
+  },
+  // Identity Card in Profile
+  identityCard: {
+    padding: 16,
+  },
+  identityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  identityTitle: {
+    color: GOLD,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace',
+  },
+  identityClaimText: {
+    color: TEXT_PRIMARY,
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 26,
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  identityStats: {
+    flexDirection: 'row',
+    gap: 24,
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    paddingTop: 16,
+  },
+  statMini: {
+    flexDirection: 'column',
+    gap: 4,
+  },
+  statMiniLabel: {
+    color: TEXT_MUTED,
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace',
+  },
+  statMiniValue: {
+    color: TEXT_PRIMARY,
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'ui-monospace',
   },
 });

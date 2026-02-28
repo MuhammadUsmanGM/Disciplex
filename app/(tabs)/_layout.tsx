@@ -1,10 +1,9 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
-import { MotiView } from 'moti';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors, GOLD, SURFACE, BORDER } from '@/constants/theme';
+import { Colors, GOLD, SURFACE } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { NavIcons } from '@/src/utils/icons';
 
@@ -86,21 +85,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="identity"
         options={{
-          title: 'Identity',
-          tabBarIcon: ({ color, focused }) => (
-            <NavIcons.Identity
-              size={24}
-              color={focused ? GOLD : color}
-            />
-          ),
+          href: null, // Hide from tab bar
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <NavIcons.Settings
+            <NavIcons.Identity
               size={24}
               color={focused ? GOLD : color}
             />
