@@ -28,8 +28,10 @@ import {
 import { StatusIcons, ActionIcons, FeatureIcons } from '@/src/utils/icons';
 import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { useHabitStore } from '@/src/store/useHabitStore';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [identityClaim, setIdentityClaim] = useState<string | null>(null);
   const [todayDate, setTodayDate] = useState('');
 
@@ -107,14 +109,18 @@ export default function HomeScreen() {
               <MotiView
                 from={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring', damping: 15, delay: 200 }}
+                transition={{ type: 'spring' as const, damping: 15, delay: 200 }}
               >
-                <View style={styles.debtRow}>
+                <Pressable
+                  style={styles.debtRow}
+                  onPress={() => router.push('/(tabs)/identity/debt-tracker' as any)}
+                >
                   <View style={styles.debtDot} />
                   <Text style={styles.debtText}>
                     Identity Debt: {Math.round(identityDebt)} pts
                   </Text>
-                </View>
+                  <Text style={styles.debtChevron}>›</Text>
+                </Pressable>
               </MotiView>
             )}
           </View>
@@ -296,6 +302,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontFamily: 'ui-monospace',
     letterSpacing: 0.5,
+  },
+  debtChevron: {
+    color: RED,
+    fontSize: 14,
+    marginLeft: 4,
   },
 
   // Identity Claim

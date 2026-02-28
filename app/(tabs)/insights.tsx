@@ -234,7 +234,7 @@ export default function InsightsScreen() {
             <Text style={styles.headerSub}>Last 7 days</Text>
           </View>
           {hasData && (
-             <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} />
+             <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} isPro={isPro} />
           )}
         </View>
 
