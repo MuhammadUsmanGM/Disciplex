@@ -1,4 +1,5 @@
 import { useFocusEffect } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useCallback, useState } from 'react';
 import {
     SafeAreaView,
@@ -9,19 +10,19 @@ import {
 } from 'react-native';
 
 import {
-    BASE,
     BORDER,
     GLASS_BORDER,
     GLASS_SURFACE,
     GOLD,
     GOLD_SUBTLE,
     RED,
+    SHADOWS,
     SURFACE,
     SURFACE_2,
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
-    getScoreColor,
+    getScoreColor
 } from '@/constants/theme';
 import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
@@ -85,12 +86,26 @@ export default function IdentityScreen() {
         </View>
 
         {/* Alignment Score Card */}
-        <View style={styles.alignmentCard}>
+        <MotiView
+          from={{ scale: 0.98, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 15 }}
+          style={[
+            styles.alignmentCard,
+            alignmentPercentage >= 75 && SHADOWS.goldGlow
+          ]}
+        >
           <Text style={styles.alignmentLabel}>Current Alignment</Text>
           <View style={styles.scoreRow}>
-            <Text style={[styles.scoreNumber, { color: alignmentColor }]}>
-              {onboardingData ? alignmentPercentage : '—'}
-            </Text>
+            <MotiView
+              from={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 300 }}
+            >
+              <Text style={[styles.scoreNumber, { color: alignmentColor }]}>
+                {onboardingData ? alignmentPercentage : '—'}
+              </Text>
+            </MotiView>
             <Text style={styles.scorePercent}>%</Text>
           </View>
           <Text style={[styles.alignmentState, { color: alignmentColor }]}>
@@ -103,18 +118,20 @@ export default function IdentityScreen() {
               : 'Complete onboarding'}
           </Text>
           <View style={styles.progressTrack}>
-            <View
+            <MotiView
+              from={{ width: '0%' }}
+              animate={{ width: `${Math.min(100, alignmentPercentage)}%` }}
+              transition={{ type: 'timing', duration: 1500, delay: 500 }}
               style={[
                 styles.progressFill,
                 {
-                  width: `${Math.min(100, alignmentPercentage)}%`,
                   backgroundColor: alignmentColor,
                 },
               ]}
             />
           </View>
           <Text style={styles.progressHint}>7-day weighted average</Text>
-        </View>
+        </MotiView>
 
         {/* Identity Claim */}
         {onboardingData && (
@@ -254,7 +271,7 @@ export default function IdentityScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BASE,
+    backgroundColor: 'transparent',
   },
   scroll: {
     flex: 1,

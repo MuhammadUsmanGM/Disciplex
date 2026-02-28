@@ -275,7 +275,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BASE,
+    backgroundColor: 'transparent',
   },
   scroll: {
     flex: 1,

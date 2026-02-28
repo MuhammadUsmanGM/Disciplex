@@ -5,6 +5,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors, GOLD, SURFACE } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { LiveBackground } from '@/src/components/ui/LiveBackground';
 import { NavIcons } from '@/src/utils/icons';
 
 export default function TabLayout() {
@@ -12,7 +13,9 @@ export default function TabLayout() {
   const isDark = colorScheme !== 'light';
 
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <LiveBackground />
+      <Tabs
       screenOptions={{
         tabBarActiveTintColor: GOLD,
         tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
@@ -107,6 +110,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }
 

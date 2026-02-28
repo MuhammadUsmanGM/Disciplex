@@ -27,9 +27,14 @@ export const TEXT_MUTED = '#3A3A3A';
 // Gold — Premium Signal / Achievement
 export const GOLD = '#C9A84C';
 export const GOLD_DIM = '#A07830';
+export const VIBRANT_GOLD = '#FFD700';
+export const GOLD_GLOW = 'rgba(255, 215, 0, 0.40)';
 export const GOLD_SUBTLE = 'rgba(201, 168, 76, 0.10)';
 export const GOLD_SUBTLE_2 = 'rgba(201, 168, 76, 0.20)';
-export const GOLD_GLOW = 'rgba(201, 168, 76, 0.40)';
+
+// Performance Glows
+export const GLOW_GOLD = 'rgba(255, 215, 0, 0.15)';
+export const GLOW_RED = 'rgba(255, 0, 0, 0.15)';
 
 // Alternative Accent Colors (for custom themes)
 export const ACCENT_COLORS = {
@@ -46,8 +51,10 @@ export type AccentColor = keyof typeof ACCENT_COLORS;
 // Red — Consequence Only / Debt / Failure
 export const RED = '#CC0000';
 export const RED_DIM = '#990000';
+export const VIBRANT_RED = '#FF3B30';
 export const RED_SUBTLE = 'rgba(204, 0, 0, 0.10)';
 export const RED_SUBTLE_2 = 'rgba(204, 0, 0, 0.20)';
+export const RED_GLOW = 'rgba(255, 59, 48, 0.3)';
 
 // Status
 export const SUCCESS = '#2A7A4B';
@@ -57,42 +64,34 @@ export const WARNING_SUBTLE = 'rgba(138, 106, 0, 0.15)';
 
 // Gradient Colors (for premium effects)
 export const GRADIENTS = {
-  gold: ['#C9A84C', '#A07830', '#C9A84C'],
-  goldSubtle: ['rgba(201, 168, 76, 0.15)', 'rgba(201, 168, 76, 0.05)'],
-  red: ['#CC0000', '#990000', '#CC0000'],
-  surface: ['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.02)'],
-  card: ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.01)'],
+  gold: ['#FFD700', '#C9A84C', '#A07830'],
+  goldSubtle: ['rgba(255, 215, 0, 0.1)', 'rgba(201, 168, 76, 0.05)', 'rgba(0,0,0,0)'],
+  red: ['#FF3B30', '#CC0000', '#990000'],
+  redSubtle: ['rgba(255, 59, 48, 0.15)', 'rgba(204, 0, 0, 0.05)', 'rgba(0,0,0,0)'],
+  blue: ['#007AFF', '#0040FF'],
+  surface: ['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.04)'],
+  card: ['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.01)'],
+  mesh: ['#0A0A0A', '#111111', '#0A0A0A'],
 };
 
 // Shadow Effects (for depth)
 export const SHADOWS = {
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 8,
-  },
+  sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 2 },
+  md: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 4 },
+  lg: { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.6, shadowRadius: 20, elevation: 8 },
   goldGlow: {
-    shadowColor: GOLD,
+    shadowColor: VIBRANT_GOLD,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  redGlow: {
+    shadowColor: VIBRANT_RED,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
     shadowRadius: 20,
-    elevation: 10,
+    elevation: 8,
   },
 };
 

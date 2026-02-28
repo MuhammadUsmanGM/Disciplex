@@ -1,4 +1,5 @@
 import { useFocusEffect } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,7 +12,6 @@ import {
 } from 'react-native';
 
 import {
-  BASE,
   BORDER,
   GLASS_BORDER,
   GLASS_SURFACE,
@@ -22,7 +22,7 @@ import {
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
-  getScoreColor,
+  getScoreColor
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
@@ -294,7 +294,12 @@ export default function InsightsScreen() {
         </View>
 
         {/* 7-Day Bar Chart */}
-        <View style={styles.card}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 100 }}
+          style={styles.card}
+        >
           <Text style={styles.cardLabel}>Execution — 7 Days</Text>
           <View style={styles.chart}>
             {barData.map((item, i) => {
@@ -334,11 +339,16 @@ export default function InsightsScreen() {
           {!hasData && (
             <Text style={styles.emptyChart}>Log habits to see your execution chart.</Text>
           )}
-        </View>
+        </MotiView>
 
         {/* 30-Day Trend Chart */}
         {trend30DayData.length > 7 && (
-          <View style={styles.card}>
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 800, delay: 200 }}
+            style={styles.card}
+          >
             <Text style={styles.cardLabel}>Trend — 30 Days</Text>
             <View style={styles.trendChart}>
               {trend30DayData.map((item, i, arr) => {
@@ -395,11 +405,16 @@ export default function InsightsScreen() {
                 <Text style={styles.legendText}>{'<'}50 Gap</Text>
               </View>
             </View>
-          </View>
+          </MotiView>
         )}
 
         {/* Most Missed */}
-        <View style={styles.card}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 300 }}
+          style={styles.card}
+        >
           <Text style={styles.cardLabel}>Most Missed</Text>
           {mostMissed ? (
             <View style={styles.missedRow}>
@@ -417,10 +432,15 @@ export default function InsightsScreen() {
               {hasData ? 'All habits completed every day. Rare.' : 'No data yet.'}
             </Text>
           )}
-        </View>
+        </MotiView>
 
         {/* Bottleneck */}
-        <View style={[styles.card, bottleneck ? styles.cardDanger : null]}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 400 }}
+          style={[styles.card, bottleneck ? styles.cardDanger : null]}
+        >
           <Text style={styles.cardLabel}>Bottleneck</Text>
           {bottleneck ? (
             <View>
@@ -444,7 +464,7 @@ export default function InsightsScreen() {
                 : 'No data yet.'}
             </Text>
           )}
-        </View>
+        </MotiView>
 
         {/* Weekly AI Reckoning - Pro Feature */}
         {identityClaim && (
@@ -613,7 +633,7 @@ const statStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BASE,
+    backgroundColor: 'transparent',
   },
   scroll: { flex: 1 },
   content: {
