@@ -26,6 +26,7 @@ import {
     getScoreColor,
     getScoreLabel,
 } from '@/constants/theme';
+import { CheckBurst } from '@/src/components/ui/CheckBurst';
 import { useHabitStore } from '@/src/store/useHabitStore';
 import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { ActionIcons, FeatureIcons } from '@/src/utils/icons';
@@ -46,6 +47,8 @@ export default function HomeScreen() {
     getTodayScore,
     loading,
   } = useHabitStore();
+
+  const [burstingId, setBurstingId] = useState<string | null>(null);
 
   // Load onboarding data and load habits from cloud
   useEffect(() => {
@@ -75,6 +78,14 @@ export default function HomeScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+
+    // Only burst when checking (toggling completion to true)
+    const habit = habitsWithStatus.find(h => h.id === habitId);
+    if (habit && !habit.completedToday) {
+      setBurstingId(habitId);
+      setTimeout(() => setBurstingId(null), 800); // Reset for next use
+    }
+
     await toggleHabit(habitId);
   };
 
@@ -168,12 +179,19 @@ export default function HomeScreen() {
             </Text>
           ) : (
             habitsWithStatus.map((habit, index) => (
-              <MotiView
-                key={habit.id}
-                from={createStaggerAnimation(index, 50).from}
-                animate={createStaggerAnimation(index, 50).animate}
-                transition={createStaggerAnimation(index, 50).transition}
-              >
+                <MotiView
+                  key={habit.id}
+                  from={createStaggerAnimation(index, 50).from}
+                  animate={{
+                    ...createStaggerAnimation(index, 50).animate,
+                    scale: burstingId === habit.id ? 1.03 : 1,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    damping: 10,
+                    stiffness: 200,
+                  }}
+                >
                 <Pressable
                   style={[styles.habitRow, habit.completedToday && styles.habitRowCompleted]}
                   onPress={() => handleToggleHabit(habit.id)}
@@ -203,6 +221,12 @@ export default function HomeScreen() {
                           <ActionIcons.Check size={14} color="#0A0A0A" />
                         </MotiView>
                       )}
+
+                      {/* Burst effect on check */}
+                      <CheckBurst
+                        visible={burstingId === habit.id}
+                        color={scoreColor}
+                      />
                     </View>
                   </MotiView>
 
