@@ -14,10 +14,14 @@ import {
   TEXT_MUTED,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
+  ACCENT_COLORS,
+  AccentColor,
 } from '@/constants/theme';
 import { Paywall } from '@/src/components/ui/Paywall';
+import { ThemePicker } from '@/src/components/ui/ThemePicker';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import { useSubscription } from '@/src/hooks/useSubscription';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { supabase } from '@/src/lib/supabase';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
@@ -27,6 +31,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const appVersion = '1.0.0';
   const { scoreHistory, habits } = useHabitStore();
+  const { accentColor, setAccentColor, accentName } = useTheme();
   const {
     permissionGranted,
     loading: notifLoading,
@@ -405,6 +410,16 @@ export default function SettingsScreen() {
               <Text style={styles.chevron}>›</Text>
             </PressableRow>
             <View style={styles.separator} />
+            <View style={styles.themePickerRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Accent Color</Text>
+                <Text style={styles.settingHint}>Currently: {accentName}</Text>
+              </View>
+            </View>
+            <ThemePicker selectedColor={accentColor} onSelectColor={setAccentColor} />
+          </View>
+
+          <View style={styles.card}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>AI Tone</Text>
@@ -671,6 +686,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
     fontFamily: 'ui-monospace',
+  },
+  themePickerRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
 
   // Setting Row

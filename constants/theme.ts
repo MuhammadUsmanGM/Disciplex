@@ -25,6 +25,18 @@ export const GOLD_SUBTLE = 'rgba(201, 168, 76, 0.10)';
 export const GOLD_SUBTLE_2 = 'rgba(201, 168, 76, 0.20)';
 export const GOLD_GLOW = 'rgba(201, 168, 76, 0.40)';
 
+// Alternative Accent Colors (for custom themes)
+export const ACCENT_COLORS = {
+  gold: { primary: '#C9A84C', dim: '#A07830', subtle: 'rgba(201, 168, 76, 0.10)', glow: 'rgba(201, 168, 76, 0.40)', name: 'Gold' },
+  blue: { primary: '#4A90D9', dim: '#2E6BA6', subtle: 'rgba(74, 144, 217, 0.10)', glow: 'rgba(74, 144, 217, 0.40)', name: 'Blue' },
+  purple: { primary: '#9B59D9', dim: '#7239A6', subtle: 'rgba(155, 89, 217, 0.10)', glow: 'rgba(155, 89, 217, 0.40)', name: 'Purple' },
+  green: { primary: '#27AE60', dim: '#1E8449', subtle: 'rgba(39, 174, 96, 0.10)', glow: 'rgba(39, 174, 96, 0.40)', name: 'Green' },
+  orange: { primary: '#D97B2E', dim: '#A65E22', subtle: 'rgba(217, 123, 46, 0.10)', glow: 'rgba(217, 123, 46, 0.40)', name: 'Orange' },
+  rose: { primary: '#D94A6E', dim: '#A63952', subtle: 'rgba(217, 74, 110, 0.10)', glow: 'rgba(217, 74, 110, 0.40)', name: 'Rose' },
+};
+
+export type AccentColor = keyof typeof ACCENT_COLORS;
+
 // Red — Consequence Only / Debt / Failure
 export const RED = '#CC0000';
 export const RED_DIM = '#990000';
