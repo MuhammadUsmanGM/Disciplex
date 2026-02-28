@@ -3,29 +3,31 @@ import { useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 import {
-    BASE,
-    BORDER,
-    GLASS_BORDER,
-    GLASS_SURFACE,
-    GOLD,
-    GOLD_SUBTLE,
-    RED,
-    SURFACE_2,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    getScoreColor,
-    getScoreLabel
+  BASE,
+  BORDER,
+  GLASS_BORDER,
+  GLASS_SURFACE,
+  GOLD,
+  GOLD_GLOW,
+  GOLD_SUBTLE,
+  RED,
+  RED_GLOW,
+  SURFACE_2,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  getScoreColor,
+  getScoreLabel
 } from '@/constants/theme';
 import { CheckBurst } from '@/src/components/ui/CheckBurst';
 import { useHabitStore } from '@/src/store/useHabitStore';
@@ -119,33 +121,55 @@ export default function HomeScreen() {
           from={ScorePop.from}
           animate={ScorePop.animate}
           transition={ScorePop.transition}
+          style={styles.scoreBlock}
         >
-          <View style={styles.scoreBlock}>
-            <Text style={[styles.scoreNumber, { color: scoreColor }]}>
-              {habits.length === 0 ? '—' : Math.round(score)}
-            </Text>
-            <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
+          {/* Animated Glow Background */}
+          <MotiView
+            from={{ opacity: 0.3, scale: 0.8 }}
+            animate={{ 
+              opacity: score >= 75 ? 0.6 : 0.4, 
+              scale: [1, 1.2, 1] 
+            }}
+            transition={{
+              type: 'timing',
+              duration: 3000,
+              loop: true,
+            }}
+            style={[
+              styles.scoreGlow,
+              { backgroundColor: score >= 50 ? GOLD_GLOW : RED_GLOW }
+            ]}
+          />
 
-            {/* Identity Debt */}
-            {hasDebt && (
-              <MotiView
-                from={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring' as const, damping: 15, delay: 200 }}
+          <Text style={[styles.scoreNumber, { color: scoreColor }]}>
+            {habits.length === 0 ? '—' : Math.round(score)}
+          </Text>
+          <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
+
+          {/* Identity Debt */}
+          {hasDebt && (
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring' as const, damping: 15, delay: 200 }}
+            >
+              <Pressable
+                style={styles.debtRow}
+                onPress={() => router.push('/(tabs)/identity' as any)}
               >
-                <Pressable
-                  style={styles.debtRow}
-                  onPress={() => router.push('/(tabs)/identity' as any)}
+                <MotiView
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ type: 'timing', duration: 1500, loop: true }}
                 >
                   <View style={styles.debtDot} />
-                  <Text style={styles.debtText}>
-                    Identity Debt: {Math.round(identityDebt)} pts
-                  </Text>
-                  <Text style={styles.debtChevron}>›</Text>
-                </Pressable>
-              </MotiView>
-            )}
-          </View>
+                </MotiView>
+                <Text style={styles.debtText}>
+                  Identity Debt: {Math.round(identityDebt)} pts
+                </Text>
+                <Text style={styles.debtChevron}>›</Text>
+              </Pressable>
+            </MotiView>
+          )}
         </MotiView>
 
         {/* Identity Claim */}
@@ -303,6 +327,16 @@ const styles = StyleSheet.create({
   scoreBlock: {
     alignItems: 'center',
     marginBottom: 28,
+    position: 'relative',
+  },
+  scoreGlow: {
+    position: 'absolute',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    top: -50,
+    zIndex: -1,
+    filter: Platform.OS === 'web' ? 'blur(100px)' : undefined, // Native uses different blur usually
   },
   scoreNumber: {
     fontSize: 96,

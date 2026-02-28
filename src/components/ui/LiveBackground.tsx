@@ -54,7 +54,17 @@ export function LiveBackground() {
         }]}
       />
 
-      {/* Subtle Scanline / Noise Overlay for texture */}
+      {/* Scanline / Grid Overlay */}
+      <View style={styles.gridContainer} pointerEvents="none">
+        {[...Array(20)].map((_, i) => (
+          <View key={`h-${i}`} style={[styles.gridLineH, { top: `${(i / 20) * 100}%` }]} />
+        ))}
+        {[...Array(12)].map((_, i) => (
+          <View key={`v-${i}`} style={[styles.gridLineV, { left: `${(i / 12) * 100}%` }]} />
+        ))}
+      </View>
+
+      {/* Subtle Noise / Gradient Overlay */}
       <View style={styles.overlay} pointerEvents="none" />
     </View>
   );
@@ -70,5 +80,23 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.1)',
-  }
+  },
+  gridContainer: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.1,
+  },
+  gridLineH: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  gridLineV: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
 });

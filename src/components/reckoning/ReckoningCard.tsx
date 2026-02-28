@@ -6,8 +6,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Fonts, GLASS_BORDER, GLASS_SURFACE, GOLD, RED, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
+import { Fonts, GLASS_BORDER, GLASS_SURFACE, GOLD, GOLD_GLOW, RED, SHADOWS, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
 import { ReckoningResult } from '@/src/types/reckoning';
+import { MotiView } from 'moti';
 
 interface ReckoningCardProps {
   reckoning: ReckoningResult;
@@ -24,7 +25,12 @@ export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCa
   });
 
   return (
-    <View style={styles.container}>
+    <MotiView 
+       from={{ opacity: 0, scale: 0.95, translateY: 20 }}
+       animate={{ opacity: 1, scale: 1, translateY: 0 }}
+       transition={{ type: 'timing', duration: 1000 }}
+       style={[styles.container, weekScore >= 75 && SHADOWS.goldGlow]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>WEEKLY RECKONING</Text>
@@ -33,18 +39,28 @@ export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCa
 
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={styles.statBox}>
+        <MotiView 
+          from={{ opacity: 0, translateX: -20 }}
+          animate={{ opacity: 1, translateX: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 200 }}
+          style={styles.statBox}
+        >
           <Text style={styles.statLabel}>WEEK SCORE</Text>
           <Text style={[styles.statValue, { color: getScoreColor(weekScore) }]}>
             {Math.round(weekScore)}
           </Text>
-        </View>
-        <View style={styles.statBox}>
+        </MotiView>
+        <MotiView 
+          from={{ opacity: 0, translateX: 20 }}
+          animate={{ opacity: 1, translateX: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 300 }}
+          style={styles.statBox}
+        >
           <Text style={styles.statLabel}>TREND</Text>
           <Text style={[styles.statValue, { color: trend >= 0 ? GOLD : RED }]}>
             {trend >= 0 ? '+' : ''}{Math.round(trend)}%
           </Text>
-        </View>
+        </MotiView>
       </View>
 
       {/* Verdict */}
@@ -62,16 +78,25 @@ export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCa
       ) : null}
 
       {/* Directive */}
-      <View style={[styles.section, styles.projectionSection]}>
+      <MotiView 
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 800, delay: 500 }}
+        style={[styles.section, styles.projectionSection]}
+      >
         <Text style={styles.sectionLabel}>PROJECTION (365 DAYS)</Text>
         <Text style={styles.projectionText}>{reckoning.projection}</Text>
-      </View>
+      </MotiView>
 
-      <View style={[styles.section, styles.directiveSection]}>
+      <MotiView 
+         animate={{ scale: [1, 1.02, 1] }}
+         transition={{ type: 'timing', duration: 3000, loop: true }}
+         style={[styles.section, styles.directiveSection]}
+      >
         <Text style={styles.sectionLabel}>DIRECTIVE</Text>
         <Text style={styles.directiveText}>{reckoning.directive}</Text>
-      </View>
-    </View>
+      </MotiView>
+    </MotiView>
   );
 }
 
@@ -146,11 +171,11 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   projectionSection: {
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: GOLD_GLOW,
   },
   directiveSection: {
     marginTop: 12,

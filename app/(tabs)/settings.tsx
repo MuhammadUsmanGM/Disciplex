@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
-    BASE,
     BORDER,
+    GLASS_BORDER,
+    GLASS_SURFACE,
     GOLD,
     RED,
     RED_SUBTLE,
@@ -232,12 +234,22 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <MotiView 
+          from={{ opacity: 0, translateX: -20 }}
+          animate={{ opacity: 1, translateX: 0 }}
+          transition={{ type: 'timing', duration: 800 }}
+          style={styles.header}
+        >
           <Text style={styles.headerLabel}>Profile</Text>
-        </View>
+        </MotiView>
 
         {/* Identity Contract Section */}
-        <View style={styles.section}>
+        <MotiView 
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 800, delay: 100 }}
+          style={styles.section}
+        >
           <Text style={styles.sectionLabel}>Identity Contract</Text>
           <TouchableOpacity
             style={styles.card}
@@ -265,7 +277,7 @@ export default function SettingsScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        </View>
+        </MotiView>
 
         {/* User Account Section */}
         <View style={styles.section}>
@@ -614,7 +626,7 @@ function PressableRow({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BASE,
+    backgroundColor: 'transparent',
   },
   scroll: {
     flex: 1,
@@ -652,9 +664,9 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: SURFACE,
+    backgroundColor: GLASS_SURFACE,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: GLASS_BORDER,
     borderRadius: 12,
     overflow: 'hidden',
   },
