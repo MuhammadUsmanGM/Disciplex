@@ -152,6 +152,15 @@ export default function InsightsScreen() {
 
   const hasData = scoreHistory.length > 0;
 
+  // Calculate 30-day trend data for line chart
+  const trend30DayData = useMemo(() => {
+    const last30Scores = scoreHistory.slice(-30).map((s) => ({
+      date: s.date,
+      score: s.score,
+    }));
+    return last30Scores;
+  }, [scoreHistory]);
+
   // Calculate week score (average of last 7 days)
   const weekScore = useMemo(() => {
     const last7 = scoreHistory.slice(-7).map((s) => s.score);
@@ -313,6 +322,68 @@ export default function InsightsScreen() {
             <Text style={styles.emptyChart}>Log habits to see your execution chart.</Text>
           )}
         </View>
+
+        {/* 30-Day Trend Chart */}
+        {trend30DayData.length > 7 && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Trend — 30 Days</Text>
+            <View style={styles.trendChart}>
+              {trend30DayData.map((item, i, arr) => {
+                const isLast = i === arr.length - 1;
+                const prevItem = arr[i - 1];
+                const trend = prevItem ? item.score - prevItem.score : 0;
+                
+                return (
+                  <View key={item.date} style={[styles.trendPoint, { left: `${(i / (arr.length - 1)) * 100}%` }]}>
+                    <View
+                      style={[
+                        styles.trendDot,
+                        {
+                          backgroundColor: getScoreColor(item.score),
+                          top: 100 - item.score,
+                        },
+                      ]}
+                    />
+                    {i > 0 && prevItem && (
+                      <View
+                        style={[
+                          styles.trendLine,
+                          {
+                            left: `${((i - 1) / (arr.length - 1)) * 100}%`,
+                            width: `${100 / (arr.length - 1)}%`,
+                            transform: [
+                              { rotate: `${Math.atan2(item.score - prevItem.score, 1) * (180 / Math.PI)}deg` },
+                            ],
+                            top: 100 - prevItem.score,
+                          },
+                        ]}
+                      />
+                    )}
+                    {isLast && (
+                      <Text style={[styles.trendScore, { color: getScoreColor(item.score) }]}>
+                        {Math.round(item.score)}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+            <View style={styles.trendLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: GOLD }]} />
+                <Text style={styles.legendText}>≥75 Aligned</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: TEXT_PRIMARY }]} />
+                <Text style={styles.legendText}>50-74 Drifting</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: RED }]} />
+                <Text style={styles.legendText}>{'<'}50 Gap</Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Most Missed */}
         <View style={styles.card}>
@@ -622,6 +693,58 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,
+  },
+
+  // 30-Day Trend Chart
+  trendChart: {
+    height: 120,
+    position: 'relative',
+    marginBottom: 12,
+  },
+  trendPoint: {
+    position: 'absolute',
+    width: 20,
+    alignItems: 'center',
+  },
+  trendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  trendLine: {
+    position: 'absolute',
+    height: 1,
+    backgroundColor: BORDER,
+    transformOrigin: 'left center',
+  },
+  trendScore: {
+    fontSize: 11,
+    fontFamily: 'ui-monospace',
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  trendLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    color: TEXT_MUTED,
+    fontSize: 10,
+    fontFamily: 'ui-monospace',
   },
 
   // Most missed
