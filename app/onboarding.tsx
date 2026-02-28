@@ -1,7 +1,7 @@
 import { supabase } from '@/src/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState , useEffect} from 'react';
 import {
   Animated,
   Image,
@@ -70,6 +70,30 @@ export default function OnboardingScreen() {
   const goBack = () => animateTransition(() => setStep((s) => s - 1));
 
   const [saving, setSaving] = useState(false);
+
+  // Auto-resume check: If user already has data in Supabase, skip onboarding
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('users')
+          .select('identity_claim')
+          .eq('id', user.id)
+          .single();
+        if (data?.identity_claim) {
+          await AsyncStorage.setItem('onboarding_complete', 'true');
+          router.replace('/(tabs)' as never);
+        }
+      }
+    };
+    checkExistingProfile();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace('/(auth)/login' as never);
+  };
 
   const handleComplete = async () => {
     setSaving(true);
@@ -150,7 +174,7 @@ export default function OnboardingScreen() {
       )}
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        {step === 0 && <WelcomeStep onNext={goNext} />}
+        {step === 0 && <WelcomeStep onNext={goNext} onSignOut={handleSignOut} />}
         {step === 1 && (
           <IdentityClaimStep
             value={data.identity_claim}
@@ -197,7 +221,7 @@ export default function OnboardingScreen() {
 
 // ─── Step Components ──────────────────────────────────────────────────────────
 
-function WelcomeStep({ onNext }: { onNext: () => void }) {
+function WelcomeStep({ onNext, onSignOut }: { onNext: () => void; onSignOut: () => void }) {
   return (
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.logoContainer}>
@@ -214,6 +238,10 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       </Text>
       <Pressable style={styles.primaryButton} onPress={onNext}>
         <Text style={styles.primaryButtonText}>Begin</Text>
+      </Pressable>
+
+      <Pressable style={styles.signOutButton} onPress={onSignOut}>
+        <Text style={styles.signOutText}>Use a different account? Logout</Text>
       </Pressable>
     </ScrollView>
   );
@@ -745,6 +773,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  signOutButton: {
+    marginTop: 24,
+    alignItems: 'center',
+    padding: 10,
+  },
+  signOutText: {
+    color: TEXT_MUTED,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 
   // Completion
