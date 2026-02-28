@@ -130,25 +130,41 @@ export function ShareCardWrapper({ score, verdictExcerpt, children, isPro = fals
         options={{ format: 'png', quality: 1.0 }}
         style={styles.offscreen}
       >
-        <View style={styles.card}>
-          <Text style={[styles.score, { color }]}>{Math.round(score)}</Text>
-          <Text style={[styles.label, { color }]}>{label}</Text>
+          <View style={styles.card}>
+            {/* Corner Markers */}
+            <View style={[styles.corner, { top: 40, left: 40, borderTopWidth: 2, borderLeftWidth: 2 }]} />
+            <View style={[styles.corner, { top: 40, right: 40, borderTopWidth: 2, borderRightWidth: 2 }]} />
+            <View style={[styles.corner, { bottom: 40, left: 40, borderBottomWidth: 2, borderLeftWidth: 2 }]} />
+            <View style={[styles.corner, { bottom: 40, right: 40, borderBottomWidth: 2, borderRightWidth: 2 }]} />
 
-          <View style={styles.divider} />
+            <View style={styles.recordHeader}>
+              <Text style={styles.recordId}>RECORD ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</Text>
+              <Text style={styles.recordId}>{new Date().toISOString().split('T')[0]}</Text>
+            </View>
 
-          <Text style={styles.verdict}>
-            {verdictExcerpt || "Identity claim tested. Data logged."}
-          </Text>
+            <Text style={[styles.score, { color }]}>{Math.round(score)}</Text>
+            <Text style={[styles.label, { color }]}>{label}</Text>
 
-          <Text style={styles.wordmark}>DISCIPLEX</Text>
-        </View>
-      </ViewShot>
+            <View style={styles.divider} />
+
+            <Text style={styles.verdict}>
+              {verdictExcerpt || "Identity claim tested. Behavioral alignment confirmed. System log entry persistent."}
+            </Text>
+
+            <View style={styles.footer}>
+              <View style={styles.footerLine} />
+              <Text style={styles.wordmark}>DISCIPLEX OS // PERFORMANCE REPORT</Text>
+              <View style={styles.footerLine} />
+            </View>
+          </View>
+        </ViewShot>
+      </View>
 
       <Pressable onPress={handleShare} disabled={checking}>
         {children || (
           <View style={[styles.defaultTrigger, checking && styles.defaultTriggerDisabled]}>
             <Text style={styles.defaultTriggerText}>
-              {checking ? '...' : 'Share Card'}
+              {checking ? 'GENERATING...' : 'EXPORT PROOF OF EXECUTION'}
             </Text>
           </View>
         )}
@@ -162,72 +178,115 @@ const styles = StyleSheet.create({
   },
   offscreen: {
     position: 'absolute',
-    left: -10000,
+    left: -20000,
     top: 0,
     width: 600,
+    height: 800,
     backgroundColor: '#050505',
   },
   card: {
     width: 600,
+    height: 800,
     backgroundColor: '#050505',
-    padding: 60,
+    padding: 80,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#1A1A1A',
   },
-  score: {
-    fontSize: 220,
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    position: 'absolute',
+    top: 80,
+    paddingHorizontal: 80,
+  },
+  recordId: {
+    color: '#333333',
+    fontSize: 10,
     fontWeight: '700',
     fontFamily: 'ui-monospace',
-    letterSpacing: -10,
+    letterSpacing: 2,
+  },
+  score: {
+    fontSize: 240,
+    fontWeight: '900',
+    fontFamily: 'ui-monospace',
+    letterSpacing: -12,
     lineHeight: 240,
     marginBottom: 0,
   },
   label: {
-    fontSize: 32,
-    fontWeight: '700',
-    letterSpacing: 10,
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 12,
     textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
     marginBottom: 60,
   },
   divider: {
-    width: 80,
-    height: 4,
+    width: 60,
+    height: 1,
     backgroundColor: '#333333',
     marginBottom: 60,
   },
   verdict: {
     color: '#888888',
-    fontSize: 24,
-    lineHeight: 36,
+    fontSize: 18,
+    lineHeight: 30,
     textAlign: 'center',
     fontStyle: 'italic',
     marginBottom: 80,
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
+    fontFamily: 'ui-monospace',
+  },
+  footer: {
+    width: '100%',
+    position: 'absolute',
+    bottom: 80,
+    alignItems: 'center',
+  },
+  footerLine: {
+    width: 100,
+    height: 1,
+    backgroundColor: '#1A1A1A',
+    marginVertical: 10,
   },
   wordmark: {
     color: '#333333',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 6,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 4,
     fontFamily: 'ui-monospace',
   },
+  corner: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderColor: '#1A1A1A',
+  },
   defaultTrigger: {
-    padding: 12,
-    backgroundColor: '#1A1A1A',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    backgroundColor: '#0A0A0A',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#C9A84C',
     alignItems: 'center',
+    shadowColor: '#C9A84C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   defaultTriggerDisabled: {
     opacity: 0.5,
   },
   defaultTriggerText: {
-    color: '#F5F5F5',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#C9A84C',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 2,
+    fontFamily: 'ui-monospace',
   }
 });

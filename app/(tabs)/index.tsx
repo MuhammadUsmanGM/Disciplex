@@ -30,6 +30,7 @@ import {
   getScoreLabel
 } from '@/constants/theme';
 import { CheckBurst } from '@/src/components/ui/CheckBurst';
+import { useSound } from '@/src/hooks/useSound';
 import { useHabitStore } from '@/src/store/useHabitStore';
 import { ScorePop, SlideInFromTop, createStaggerAnimation } from '@/src/utils/animations';
 import { ActionIcons, FeatureIcons } from '@/src/utils/icons';
@@ -76,15 +77,26 @@ export default function HomeScreen() {
     }, []),
   );
 
+  const { playSound } = useSound();
+
   const handleToggleHabit = async (habitId: string) => {
+    const habit = habitsWithStatus.find(h => h.id === habitId);
+    const isChecking = habit && !habit.completedToday;
+
+    // Tactical Sound Feedback
+    if (isChecking) {
+      playSound('CHECK', 0.4);
+    } else {
+      playSound('UNCHECK', 0.3);
+    }
+
     // Haptic feedback
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
     // Only burst when checking (toggling completion to true)
-    const habit = habitsWithStatus.find(h => h.id === habitId);
-    if (habit && !habit.completedToday) {
+    if (isChecking) {
       setBurstingId(habitId);
       setTimeout(() => setBurstingId(null), 800); // Reset for next use
     }
@@ -146,27 +158,40 @@ export default function HomeScreen() {
           </Text>
           <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
 
-          {/* Identity Debt */}
+          {/* Identity Debt Alert */}
           {hasDebt && (
             <MotiView
               from={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: 'spring' as const, damping: 15, delay: 200 }}
+              style={styles.debtAlertContainer}
             >
               <Pressable
-                style={styles.debtRow}
+                style={styles.debtAlertCard}
                 onPress={() => router.push('/(tabs)/identity' as any)}
               >
-                <MotiView
-                  animate={{ opacity: [1, 0.4, 1] }}
-                  transition={{ type: 'timing', duration: 1500, loop: true }}
-                >
-                  <View style={styles.debtDot} />
-                </MotiView>
-                <Text style={styles.debtText}>
-                  Identity Debt: {Math.round(identityDebt)} pts
+                <View style={styles.debtAlertHeader}>
+                  <MotiView
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ type: 'timing', duration: 1000, loop: true }}
+                  >
+                    <View style={styles.criticalDot} />
+                  </MotiView>
+                  <Text style={styles.debtAlertTitle}>CRITICAL: IDENTITY DEBT ACTIVE</Text>
+                </View>
+                <Text style={styles.debtAlertAmount}>
+                  -{Math.round(identityDebt)} pts
                 </Text>
-                <Text style={styles.debtChevron}>›</Text>
+                <Text style={styles.debtAlertAction}>RECONCILE NOW ›</Text>
+                
+                {/* Warning background pulse */}
+                <MotiView
+                  animate={{ opacity: [0.05, 0.15, 0.05] }}
+                  transition={{ type: 'timing', duration: 2000, loop: true }}
+                  style={StyleSheet.absoluteFill}
+                >
+                  <View style={styles.debtPulseBackground} />
+                </MotiView>
               </Pressable>
             </MotiView>
           )}
@@ -353,29 +378,60 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontFamily: 'ui-monospace',
   },
-  debtRow: {
+  debtAlertContainer: {
+    marginTop: 24,
+    width: '100%',
+  },
+  debtAlertCard: {
+    backgroundColor: 'rgba(204, 0, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(204, 0, 0, 0.3)',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  debtAlertHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    gap: 6,
+    gap: 8,
+    zIndex: 1,
   },
-  debtDot: {
+  criticalDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: RED,
   },
-  debtText: {
+  debtAlertTitle: {
     color: RED,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
     fontFamily: 'ui-monospace',
-    letterSpacing: 0.5,
   },
-  debtChevron: {
+  debtAlertAmount: {
     color: RED,
-    fontSize: 14,
-    marginLeft: 4,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -1,
+    fontFamily: 'ui-monospace',
+    marginVertical: 4,
+    zIndex: 1,
+  },
+  debtAlertAction: {
+    color: RED,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
+    zIndex: 1,
+  },
+  debtPulseBackground: {
+    backgroundColor: RED,
+    width: '100%',
+    height: '100%',
   },
 
   // Identity Claim

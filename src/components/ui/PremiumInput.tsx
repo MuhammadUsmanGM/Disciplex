@@ -1,13 +1,12 @@
 import { BORDER, GOLD, SURFACE, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
+import { useSound } from '@/src/hooks/useSound';
 import * as Haptics from 'expo-haptics';
 import { MotiView } from 'moti';
 import React, { useRef, useState } from 'react';
 import {
-    NativeSyntheticEvent,
     StyleSheet,
     Text,
     TextInput,
-    TextInputFocusEventData,
     TextInputProps,
     View
 } from 'react-native';
@@ -38,13 +37,16 @@ export function PremiumInput({
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const { playSound } = useSound();
+
+  const handleFocus = (e: any) => {
     setIsFocused(true);
+    playSound('CHECK', 0.2);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (onFocus) onFocus(e);
   };
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur = (e: any) => {
     setIsFocused(false);
     if (onBlur) onBlur(e);
   };

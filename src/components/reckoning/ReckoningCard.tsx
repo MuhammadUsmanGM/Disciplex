@@ -1,14 +1,9 @@
-/**
- * ReckoningCard Component
- * Displays the Weekly AI Reckoning verdict
- */
-
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-
-import { Fonts, GLASS_BORDER, GLASS_SURFACE, GOLD, GOLD_GLOW, RED, SHADOWS, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
+import { GOLD, RED, SHADOWS, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
 import { ReckoningResult } from '@/src/types/reckoning';
 import { MotiView } from 'moti';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { TypewriterText } from '../ui/TypewriterText';
 
 interface ReckoningCardProps {
   reckoning: ReckoningResult;
@@ -18,6 +13,9 @@ interface ReckoningCardProps {
 }
 
 export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCardProps) {
+  const [verdictComplete, setVerdictComplete] = useState(false);
+  const [bottleneckComplete, setBottleneckComplete] = useState(false);
+
   const weekLabel = date || new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -26,76 +24,109 @@ export function ReckoningCard({ reckoning, weekScore, trend, date }: ReckoningCa
 
   return (
     <MotiView 
-       from={{ opacity: 0, scale: 0.95, translateY: 20 }}
+       from={{ opacity: 0, scale: 0.98, translateY: 10 }}
        animate={{ opacity: 1, scale: 1, translateY: 0 }}
-       transition={{ type: 'timing', duration: 1000 }}
+       transition={{ type: 'timing', duration: 600 }}
        style={[styles.container, weekScore >= 75 && SHADOWS.goldGlow]}
     >
-      {/* Header */}
+      {/* Dynamic Scanline Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>WEEKLY RECKONING</Text>
+        <View>
+          <Text style={styles.title}>IDENTITY PERFORMANCE ANALYST</Text>
+          <Text style={styles.subtitle}>PROTOCOL: WEK-RECK-01</Text>
+        </View>
         <Text style={styles.date}>{weekLabel}</Text>
       </View>
 
-      {/* Stats Grid */}
+      {/* Primary Stats Panel */}
       <View style={styles.statsGrid}>
         <MotiView 
-          from={{ opacity: 0, translateX: -20 }}
+          from={{ opacity: 0, translateX: -10 }}
           animate={{ opacity: 1, translateX: 0 }}
-          transition={{ type: 'timing', duration: 800, delay: 200 }}
-          style={styles.statBox}
+          transition={{ type: 'timing', duration: 600, delay: 200 }}
+          style={[styles.statBox, { borderLeftWidth: 2, borderLeftColor: getScoreColor(weekScore) }]}
         >
-          <Text style={styles.statLabel}>WEEK SCORE</Text>
+          <Text style={styles.statLabel}>ALIGNMENT SCORE</Text>
           <Text style={[styles.statValue, { color: getScoreColor(weekScore) }]}>
-            {Math.round(weekScore)}
+            {Math.round(weekScore)}%
           </Text>
         </MotiView>
+
         <MotiView 
-          from={{ opacity: 0, translateX: 20 }}
+          from={{ opacity: 0, translateX: 10 }}
           animate={{ opacity: 1, translateX: 0 }}
-          transition={{ type: 'timing', duration: 800, delay: 300 }}
-          style={styles.statBox}
+          transition={{ type: 'timing', duration: 600, delay: 300 }}
+          style={[styles.statBox, { borderLeftWidth: 2, borderLeftColor: trend >= 0 ? GOLD : RED }]}
         >
-          <Text style={styles.statLabel}>TREND</Text>
+          <Text style={styles.statLabel}>VECTORS / TREND</Text>
           <Text style={[styles.statValue, { color: trend >= 0 ? GOLD : RED }]}>
-            {trend >= 0 ? '+' : ''}{Math.round(trend)}%
+            {trend >= 0 ? '↑' : '↓'}{Math.abs(Math.round(trend))}%
           </Text>
         </MotiView>
       </View>
 
-      {/* Verdict */}
+      {/* AI Intelligence Sector */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>VERDICT</Text>
-        <Text style={styles.verdictText}>{reckoning.verdict}</Text>
+        <View style={styles.sectionHeader}>
+          <View style={styles.activeDot} />
+          <Text style={styles.sectionLabel}>SYSTEM VERDICT</Text>
+        </View>
+        <View style={styles.textArea}>
+          <TypewriterText 
+            text={reckoning.verdict}
+            speed={15}
+            delay={800}
+            style={styles.verdictText}
+            onComplete={() => setVerdictComplete(true)}
+          />
+        </View>
       </View>
 
-      {/* Bottleneck */}
-      {reckoning.bottleneck ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>BOTTLENECK</Text>
-          <Text style={styles.bottleneckText}>{reckoning.bottleneck}</Text>
-        </View>
-      ) : null}
+      {/* Bottlenecks revealed after verdict */}
+      {reckoning.bottleneck && verdictComplete && (
+        <MotiView
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={styles.section}
+        >
+          <View style={styles.sectionHeader}>
+            <View style={[styles.activeDot, { backgroundColor: RED }]} />
+            <Text style={[styles.sectionLabel, { color: RED }]}>CRITICAL BOTTLENECK</Text>
+          </View>
+          <View style={[styles.textArea, { borderColor: 'rgba(204, 0, 0, 0.2)' }]}>
+            <TypewriterText 
+              text={reckoning.bottleneck}
+              speed={10}
+              style={styles.bottleneckText}
+              onComplete={() => setBottleneckComplete(true)}
+            />
+          </View>
+        </MotiView>
+      )}
 
-      {/* Directive */}
-      <MotiView 
-        from={{ opacity: 0, translateY: 10 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 800, delay: 500 }}
-        style={[styles.section, styles.projectionSection]}
-      >
-        <Text style={styles.sectionLabel}>PROJECTION (365 DAYS)</Text>
-        <Text style={styles.projectionText}>{reckoning.projection}</Text>
-      </MotiView>
+      {/* Year-End Projection */}
+      {bottleneckComplete && (
+        <MotiView
+          from={{ opacity: 0, translateY: 10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          style={styles.projectionBox}
+        >
+          <Text style={styles.projectionLabel}>365-DAY PROJECTION</Text>
+          <Text style={styles.projectionText}>{reckoning.projection}</Text>
+        </MotiView>
+      )}
 
-      <MotiView 
-         animate={{ scale: [1, 1.02, 1] }}
-         transition={{ type: 'timing', duration: 3000, loop: true }}
-         style={[styles.section, styles.directiveSection]}
-      >
-        <Text style={styles.sectionLabel}>DIRECTIVE</Text>
-        <Text style={styles.directiveText}>{reckoning.directive}</Text>
-      </MotiView>
+      {/* Final Directive */}
+      {bottleneckComplete && (
+        <MotiView 
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ type: 'timing', duration: 2500, loop: true }}
+          style={styles.directiveContainer}
+        >
+          <Text style={styles.directiveLabel}>DIRECTIVE</Text>
+          <Text style={styles.directiveText}>{reckoning.directive}</Text>
+        </MotiView>
+      )}
     </MotiView>
   );
 }
@@ -108,112 +139,151 @@ function getScoreColor(score: number): string {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: GLASS_SURFACE,
+    backgroundColor: '#0A0A0A',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: 16,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
     padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    marginBottom: 20,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 16,
+    alignItems: 'flex-start',
+    marginBottom: 32,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
+    borderBottomColor: 'rgba(255, 255, 255, 0.03)',
+    paddingBottom: 16,
   },
   title: {
     color: GOLD,
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '900',
     letterSpacing: 2,
-    textTransform: 'uppercase',
+    fontFamily: 'ui-monospace',
+  },
+  subtitle: {
+    color: TEXT_SECONDARY,
+    fontSize: 9,
+    letterSpacing: 1,
+    marginTop: 4,
     fontFamily: 'ui-monospace',
   },
   date: {
     color: TEXT_SECONDARY,
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'ui-monospace',
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: 16,
+    marginBottom: 32,
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 16,
   },
   statLabel: {
     color: TEXT_SECONDARY,
-    fontSize: 8,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '700',
     letterSpacing: 1.5,
-    textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
+    letterSpacing: -1,
   },
   section: {
-    marginBottom: 18,
+    marginBottom: 24,
   },
-  projectionSection: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: GOLD_GLOW,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
-  directiveSection: {
-    marginTop: 12,
-    marginBottom: 4,
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: GOLD,
   },
   sectionLabel: {
     color: GOLD,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
     fontFamily: 'ui-monospace',
-    marginBottom: 10,
+  },
+  textArea: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.05)',
+    paddingLeft: 16,
   },
   verdictText: {
     color: TEXT_PRIMARY,
     fontSize: 14,
-    lineHeight: 22,
-    letterSpacing: 0.2,
+    lineHeight: 24,
+    fontFamily: 'ui-monospace',
+    letterSpacing: 0.5,
   },
   bottleneckText: {
-    color: TEXT_SECONDARY,
-    fontSize: 13,
-    lineHeight: 20,
+    color: RED,
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: 'ui-monospace',
+  },
+  projectionBox: {
+    backgroundColor: 'rgba(201, 168, 76, 0.03)',
+    borderRadius: 4,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 168, 76, 0.1)',
+    marginBottom: 24,
+  },
+  projectionLabel: {
+    color: GOLD,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 12,
+    fontFamily: 'ui-monospace',
   },
   projectionText: {
-    color: '#DDD',
+    color: TEXT_PRIMARY,
     fontSize: 14,
     lineHeight: 22,
     fontStyle: 'italic',
-    letterSpacing: 0.2,
+  },
+  directiveContainer: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.03)',
+    paddingTop: 20,
+    alignItems: 'center',
+  },
+  directiveLabel: {
+    color: TEXT_SECONDARY,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 4,
+    marginBottom: 12,
+    fontFamily: 'ui-monospace',
   },
   directiveText: {
     color: GOLD,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    fontFamily: Fonts.mono,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
+    textTransform: 'uppercase',
   },
 });

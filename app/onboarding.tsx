@@ -1,24 +1,25 @@
+import { useSound } from '@/src/hooks/useSound';
 import { supabase } from '@/src/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 import {
-    BASE,
-    GOLD,
-    TEXT_MUTED,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY
+  BASE,
+  GOLD,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY
 } from '@/constants/theme';
 import { LiveBackground } from '@/src/components/ui/LiveBackground';
 import { PremiumInput } from '@/src/components/ui/PremiumInput';
@@ -40,6 +41,7 @@ export default function OnboardingScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const [step, setStep] = useState(0);
+  const { playSound } = useSound();
   const [data, setData] = useState<OnboardingData>({
     identity_claim: '',
     refuse_to_be: '',
@@ -63,8 +65,14 @@ export default function OnboardingScreen() {
     });
   };
 
-  const goNext = () => animateTransition(() => setStep((s) => s + 1));
-  const goBack = () => animateTransition(() => setStep((s) => s - 1));
+  const goNext = () => animateTransition(() => {
+    playSound('CHECK', 0.4);
+    setStep((s) => s + 1);
+  });
+  const goBack = () => animateTransition(() => {
+    playSound('UNCHECK', 0.3);
+    setStep((s) => s - 1);
+  });
 
   const [saving, setSaving] = useState(false);
 
@@ -92,6 +100,7 @@ export default function OnboardingScreen() {
   };
 
   const handleComplete = async () => {
+    playSound('COMPLETE', 0.6);
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();

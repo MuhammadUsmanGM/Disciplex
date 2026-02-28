@@ -1,31 +1,29 @@
 import { useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useCallback, useMemo, useState } from 'react';
+import { useSound } from '@/src/hooks/useSound';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import {
-  BORDER,
-  GLASS_BORDER,
-  GLASS_SURFACE,
-  GOLD,
-  RED,
-  SURFACE,
-  SURFACE_2,
-  TEXT_MUTED,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  getScoreColor
+    BORDER,
+    GOLD,
+    RED,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    getScoreColor
 } from '@/constants/theme';
 import { ReckoningCard } from '@/src/components/reckoning/ReckoningCard';
 import { ShareCardWrapper } from '@/src/components/reckoning/ShareCard';
+import { IdentityIntegrity } from '@/src/components/ui/IdentityIntegrity';
 import { Paywall } from '@/src/components/ui/Paywall';
 import { SkeletonCard } from '@/src/components/ui/Skeleton';
 import { buildReckoningPayload, useReckoning } from '@/src/hooks/useReckoning';
@@ -143,14 +141,15 @@ export default function InsightsScreen() {
     return detectBottleneck(habits, weeklyCompletions, weeklyScores);
   }, [habits, completions, scoreHistory, last7Dates]);
 
-  // Current score + volatility
-
-  const volatility = useMemo(() => {
+  const stabilityIndex = useMemo(() => {
     const scores = scoreHistory.slice(-30).map((s) => s.score);
     if (scores.length < 2) return null;
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
     const variance = scores.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / scores.length;
-    return Math.round(Math.sqrt(variance) * 10) / 10;
+    const standardDeviation = Math.sqrt(variance);
+    // Convert to a 0-100 stability scale where 0 deviation is 100 stability
+    const stability = Math.max(0, 100 - (standardDeviation * 3));
+    return Math.round(stability);
   }, [scoreHistory]);
 
   const hasData = scoreHistory.length > 0;
@@ -191,6 +190,8 @@ export default function InsightsScreen() {
     return Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
   }, [scoreHistory]);
 
+  const { playSound } = useSound();
+
   // Handle generate reckoning
   const handleGenerateReckoning = useCallback(async () => {
     if (!identityClaim || !refuseToBe) {
@@ -215,14 +216,15 @@ export default function InsightsScreen() {
       weekScore: Math.round(weekScore * 10) / 10,
       previousWeekScore: Math.round(previousWeekScore * 10) / 10,
       trend30d,
-      volatilityIndex: volatility || 0,
+      volatilityIndex: stabilityIndex ? (100 - stabilityIndex)/3 : 0,
       identityAlignment: Math.round(weekScore * 10) / 10,
       identityDebt,
       habits: habitsData,
     });
 
     await generateReckoning(payload);
-  }, [identityClaim, refuseToBe, habits, completions, last7Dates, weekScore, previousWeekScore, trend30d, volatility, identityDebt, generateReckoning]);
+    playSound('CHECK', 0.5);
+  }, [identityClaim, refuseToBe, habits, completions, last7Dates, weekScore, previousWeekScore, trend30d, stabilityIndex, identityDebt, generateReckoning, playSound]);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -234,8 +236,8 @@ export default function InsightsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerLabel}>Insights</Text>
-            <Text style={styles.headerSub}>Last 7 days</Text>
+            <Text style={styles.headerLabel}>COMMAND CENTER</Text>
+            <Text style={styles.headerSub}>IDENTITY DIAGNOSTICS // LOG V.01</Text>
           </View>
           {hasData && (
              <ShareCardWrapper score={barData[barData.length - 1]?.score ?? 0} isPro={isPro} />
@@ -251,46 +253,41 @@ export default function InsightsScreen() {
           </View>
         ) : (
           <>
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <StatCard
-            label="7-Day Avg"
-            value={trend ? String(trend.value) : '—'}
-            sub={
-              trend?.delta != null
-                ? `${trend.delta >= 0 ? '+' : ''}${trend.delta} vs prior week`
-                : undefined
-            }
-            subColor={trend?.delta != null ? (trend.delta >= 0 ? GOLD : RED) : undefined}
-          />
-          <StatCard
-            label="Identity Debt"
-            value={identityDebt > 0 ? String(Math.round(identityDebt)) : '0'}
-            sub={identityDebt > 0 ? 'pts active' : 'Clear'}
-            subColor={identityDebt > 0 ? RED : GOLD}
-          />
-          <StatCard
-            label="Volatility"
-            value={volatility != null ? String(volatility) : '—'}
-            sub={
-              volatility == null
-                ? undefined
-                : volatility < 10
-                ? 'Consistent'
-                : volatility < 20
-                ? 'Unstable'
-                : 'No pattern'
-            }
-            subColor={
-              volatility == null
-                ? undefined
-                : volatility < 10
-                ? GOLD
-                : volatility < 20
-                ? TEXT_SECONDARY
-                : RED
-            }
-          />
+        {/* Diagnostic Grid */}
+        <View style={styles.diagnosticGrid}>
+           <View style={styles.primaryDiag}>
+              <IdentityIntegrity score={weekScore} />
+           </View>
+           <View style={styles.secondaryDiag}>
+              <StatCard
+                label="Stability Index"
+                value={stabilityIndex != null ? `${stabilityIndex}%` : '—'}
+                sub={
+                  stabilityIndex == null
+                    ? undefined
+                    : stabilityIndex > 80
+                    ? 'OPTIMIZED'
+                    : stabilityIndex > 60
+                    ? 'NOMINAL'
+                    : 'VOLATILE'
+                }
+                subColor={
+                  stabilityIndex == null
+                    ? undefined
+                    : stabilityIndex > 80
+                    ? GOLD
+                    : stabilityIndex > 60
+                    ? TEXT_SECONDARY
+                    : RED
+                }
+              />
+              <StatCard
+                label="Growth Vector"
+                value={trend?.delta != null ? `${trend.delta >= 0 ? '+' : ''}${trend.delta}%` : '—'}
+                sub="W/W TREND"
+                subColor={trend?.delta != null ? (trend.delta >= 0 ? GOLD : RED) : undefined}
+              />
+           </View>
         </View>
 
         {/* 7-Day Bar Chart */}
@@ -300,7 +297,7 @@ export default function InsightsScreen() {
           transition={{ type: 'timing', duration: 800, delay: 100 }}
           style={styles.card}
         >
-          <Text style={styles.cardLabel}>Execution — 7 Days</Text>
+          <Text style={styles.cardLabel}>EXECUTION HISTOGRAM — 7 DAYS</Text>
           <View style={styles.chart}>
             {barData.map((item, i) => {
               const hasScore = item.score !== null;
@@ -330,7 +327,7 @@ export default function InsightsScreen() {
                     </Text>
                   )}
                   <Text style={[styles.barDay, isToday && styles.barDayToday]}>
-                    {item.label}
+                    {item.label.toUpperCase()}
                   </Text>
                 </View>
               );
@@ -434,34 +431,32 @@ export default function InsightsScreen() {
           )}
         </MotiView>
 
-        {/* Bottleneck */}
+        {/* Bottleneck Analysis */}
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 800, delay: 400 }}
+          transition={{ type: 'timing', duration: 800, delay: 300 }}
           style={[styles.card, bottleneck ? styles.cardDanger : null]}
         >
-          <Text style={styles.cardLabel}>Bottleneck</Text>
+          <View style={styles.cardHeader}>
+             <Text style={styles.cardLabel}>SYSTEM BOTTLENECK</Text>
+             <View style={[styles.statusIndicator, { backgroundColor: bottleneck ? RED : GOLD }]} />
+          </View>
           {bottleneck ? (
             <View>
-              <Text style={styles.bottleneckName}>{bottleneck.habitName}</Text>
+              <Text style={styles.bottleneckName}>{bottleneck.habitName.toUpperCase()}</Text>
               <Text style={styles.bottleneckDetail}>
-                Completed {Math.round(bottleneck.completionRate * 100)}% of the time — but on days
-                it is done, your score averages{' '}
-                <Text style={{ color: GOLD }}>
-                  {Math.round(bottleneck.avgScoreWhenCompleted)}
-                </Text>
-                .
+                Completion rate at {Math.round(bottleneck.completionRate * 100)}%. Failure in this behavior correlates with a systematic drop in daily alignment.
               </Text>
               <Text style={styles.bottleneckVerdict}>
-                This is a structural bottleneck. Not a motivation problem.
+                [ ACTION REQUIRED: RESTRUCTURE PROTOCOL ]
               </Text>
             </View>
           ) : (
             <Text style={styles.emptyText}>
               {hasData
-                ? 'No structural bottleneck detected this week.'
-                : 'No data yet.'}
+                ? 'No structural identity blocks detected in present data set.'
+                : 'Insufficient data for bottleneck analysis.'}
             </Text>
           )}
         </MotiView>
@@ -471,9 +466,9 @@ export default function InsightsScreen() {
           <View style={styles.reckoningSection}>
             <View style={styles.reckoningHeader}>
               <View>
-                <Text style={styles.reckoningTitle}>Weekly AI Reckoning</Text>
+                <Text style={styles.reckoningTitle}>AI RECKONING ENGINE</Text>
                 <Text style={styles.reckoningSubtitle}>
-                  The verdict on who you are becoming
+                  ANALYZING BEHAVIORAL DEBT & IDENTITY DRIFT
                 </Text>
               </View>
               {!isPro && (
@@ -484,41 +479,41 @@ export default function InsightsScreen() {
             </View>
 
             {!isPro ? (
-              // Free user - show locked state
               <TouchableOpacity
                 style={styles.lockedReckoning}
                 onPress={() => setShowPaywall(true)}
               >
                 <View style={styles.lockedContent}>
                   <Text style={styles.lockIcon}>🔒</Text>
-                  <Text style={styles.lockedTitle}>Pro Feature</Text>
-                  <Text style={styles.lockedSubtitle}>
-                    AI-powered verdict, bottleneck analysis, and directive
-                  </Text>
+                  <View>
+                    <Text style={styles.lockedTitle}>Restricted Access</Text>
+                    <Text style={styles.lockedSubtitle}>
+                      Require level 1 clearance for AI diagnostics.
+                    </Text>
+                  </View>
                 </View>
                 <TouchableOpacity
                   style={styles.upgradeButton}
                   onPress={() => setShowPaywall(true)}
                 >
-                  <Text style={styles.upgradeButtonText}>Upgrade to Pro</Text>
+                  <Text style={styles.upgradeButtonText}>UPGRADE</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ) : (
-              // Pro user - show full reckoning
               <>
                 {!reckoning && !loading && (
                   <TouchableOpacity
                     style={styles.generateButton}
                     onPress={handleGenerateReckoning}
                   >
-                    <Text style={styles.generateButtonText}>Generate Reckoning</Text>
+                    <Text style={styles.generateButtonText}>INITIALIZE RECKONING</Text>
                   </TouchableOpacity>
                 )}
 
                 {loading && (
-                  <View style={styles.loadingContainer}>
+                  <View style={styles.loadingContainerLarge}>
                     <ActivityIndicator size="large" color={GOLD} />
-                    <Text style={styles.loadingText}>Analyzing your data...</Text>
+                    <Text style={styles.loadingText}>EXTRACTING BEHAVIORAL PATTERNS...</Text>
                   </View>
                 )}
 
@@ -529,7 +524,7 @@ export default function InsightsScreen() {
                       style={styles.retryButton}
                       onPress={handleGenerateReckoning}
                     >
-                      <Text style={styles.retryButtonText}>Retry</Text>
+                      <Text style={styles.retryButtonText}>RETRY</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -545,7 +540,7 @@ export default function InsightsScreen() {
                       style={styles.newReckoningButton}
                       onPress={handleGenerateReckoning}
                     >
-                      <Text style={styles.newReckoningButtonText}>Generate New Reckoning</Text>
+                      <Text style={styles.newReckoningButtonText}>UPDATE VERDICT</Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -569,17 +564,7 @@ export default function InsightsScreen() {
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  sub,
-  subColor,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  subColor?: string;
-}) {
+function StatCard({ label, value, sub, subColor }: { label: string; value: string; sub?: string; subColor?: string; }) {
   return (
     <View style={statStyles.card}>
       <Text style={statStyles.label}>{label}</Text>
@@ -592,155 +577,67 @@ function StatCard({
 const statStyles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: GLASS_SURFACE,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 16,
+    justifyContent: 'center',
   },
   label: {
     color: TEXT_MUTED,
-    fontSize: 9,
-    fontWeight: '600',
-    letterSpacing: 1.2,
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
     fontFamily: 'ui-monospace',
-    marginBottom: 6,
-    textAlign: 'center',
+    marginBottom: 4,
   },
   value: {
     color: TEXT_PRIMARY,
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '900',
     fontFamily: 'ui-monospace',
   },
   sub: {
     color: TEXT_MUTED,
-    fontSize: 10,
-    marginTop: 3,
-    textAlign: 'center',
+    fontSize: 9,
+    marginTop: 2,
     fontFamily: 'ui-monospace',
+    fontWeight: '700',
   },
 });
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
+  root: { flex: 1, backgroundColor: 'transparent' },
   scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 120,
-  },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  headerLabel: {
-    color: TEXT_PRIMARY,
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-  },
-  headerSub: {
-    color: TEXT_MUTED,
-    fontSize: 11,
-    fontFamily: 'ui-monospace',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
-  loadingContainer: {
-    gap: 16,
-  },
-
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-
-  card: {
-    backgroundColor: GLASS_SURFACE,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  cardDanger: {
-    borderColor: '#3A1A1A',
-    backgroundColor: '#0F0A0A',
-  },
-  cardLabel: {
-    color: GOLD,
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    fontFamily: 'ui-monospace',
-    marginBottom: 16,
-  },
-
-  // Bar chart
-  chart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: BAR_MAX_HEIGHT + 40,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  barTrack: {
-    height: BAR_MAX_HEIGHT,
-    justifyContent: 'flex-end',
-    width: '60%',
-  },
-  bar: {
-    width: '100%',
-    borderRadius: 3,
-    minHeight: 4,
-  },
+  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)', paddingBottom: 16 },
+  headerLabel: { color: GOLD, fontSize: 14, fontWeight: '900', letterSpacing: 4, fontFamily: 'ui-monospace' },
+  headerSub: { color: TEXT_MUTED, fontSize: 10, fontFamily: 'ui-monospace', letterSpacing: 1, marginTop: 4 },
+  loadingContainer: { gap: 16 },
+  diagnosticGrid: { flexDirection: 'row', gap: 12, marginBottom: 20, height: 160 },
+  primaryDiag: { flex: 1.2, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  secondaryDiag: { flex: 1, gap: 12 },
+  card: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 20, marginBottom: 16 },
+  cardDanger: { borderColor: 'rgba(204, 0, 0, 0.2)', backgroundColor: 'rgba(204, 0, 0, 0.02)' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  statusIndicator: { width: 4, height: 4, borderRadius: 2 },
+  cardLabel: { color: GOLD, fontSize: 10, fontWeight: '900', letterSpacing: 2, fontFamily: 'ui-monospace' },
+  chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: BAR_MAX_HEIGHT + 20 },
+  barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
+  barTrack: { height: BAR_MAX_HEIGHT, justifyContent: 'flex-end', width: '50%', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 2 },
+  bar: { width: '100%', borderRadius: 2, minHeight: 4 },
   barScore: {
     fontSize: 9,
     fontFamily: 'ui-monospace',
     marginTop: 4,
   },
-  barDay: {
-    color: TEXT_MUTED,
-    fontSize: 9,
-    fontFamily: 'ui-monospace',
-    marginTop: 2,
-  },
-  barDayToday: {
-    color: GOLD,
-  },
-  emptyChart: {
-    color: TEXT_MUTED,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-
+  barDay: { color: TEXT_MUTED, fontSize: 8, fontFamily: 'ui-monospace', marginTop: 8, fontWeight: '700' },
+  barDayToday: { color: GOLD },
+  emptyChart: { color: TEXT_MUTED, fontSize: 13, textAlign: 'center', marginTop: 8 },
   // 30-Day Trend Chart
   trendChart: {
     height: 120,
@@ -792,7 +689,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'ui-monospace',
   },
-
   // Most missed
   missedRow: {
     flexDirection: 'row',
@@ -821,175 +717,31 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'ui-monospace',
   },
-
-  // Bottleneck
-  bottleneckName: {
-    color: TEXT_PRIMARY,
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  bottleneckDetail: {
-    color: TEXT_SECONDARY,
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 10,
-  },
-  bottleneckVerdict: {
-    color: RED,
-    fontSize: 12,
-    fontFamily: 'ui-monospace',
-    letterSpacing: 0.3,
-  },
-
-  emptyText: {
-    color: TEXT_MUTED,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-
-  // AI Reckoning Section
-  reckoningSection: {
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  reckoningHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  reckoningTitle: {
-    color: TEXT_PRIMARY,
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-    marginBottom: 4,
-  },
-  reckoningSubtitle: {
-    color: TEXT_SECONDARY,
-    fontSize: 13,
-    marginBottom: 0,
-  },
-  proBadge: {
-    backgroundColor: GOLD,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  proBadgeText: {
-    color: '#0A0A0A',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    fontFamily: 'ui-monospace',
-  },
-  lockedReckoning: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  lockedContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  lockIcon: {
-    fontSize: 24,
-  },
-  lockedTitle: {
-    color: TEXT_PRIMARY,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  lockedSubtitle: {
-    color: TEXT_SECONDARY,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  upgradeButton: {
-    backgroundColor: GOLD,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  upgradeButtonText: {
-    color: '#0A0A0A',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  generateButton: {
-    backgroundColor: GOLD,
-    borderRadius: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  generateButtonText: {
-    color: '#0A0A0A',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  loadingContainerLarge: {
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: TEXT_SECONDARY,
-    fontSize: 13,
-    marginTop: 12,
-    fontFamily: 'ui-monospace',
-  },
-  errorContainer: {
-    backgroundColor: '#0F0A0A',
-    borderWidth: 1,
-    borderColor: RED,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: RED,
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: SURFACE_2,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  retryButtonText: {
-    color: TEXT_PRIMARY,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  newReckoningButton: {
-    backgroundColor: SURFACE_2,
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  newReckoningButtonText: {
-    color: TEXT_SECONDARY,
-    fontSize: 13,
-    fontWeight: '600',
-    fontFamily: 'ui-monospace',
-  },
+  bottleneckName: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '900', marginBottom: 8, fontFamily: 'ui-monospace' },
+  bottleneckDetail: { color: TEXT_SECONDARY, fontSize: 13, lineHeight: 20, marginBottom: 12 },
+  bottleneckVerdict: { color: RED, fontSize: 11, fontFamily: 'ui-monospace', fontWeight: '800' },
+  emptyText: { color: TEXT_MUTED, fontSize: 12, lineHeight: 18, fontFamily: 'ui-monospace' },
+  reckoningSection: { marginTop: 12, marginBottom: 20 },
+  reckoningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  reckoningTitle: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '900', letterSpacing: 2, marginBottom: 4, fontFamily: 'ui-monospace' },
+  reckoningSubtitle: { color: TEXT_SECONDARY, fontSize: 11, letterSpacing: 1, fontFamily: 'ui-monospace' },
+  proBadge: { backgroundColor: GOLD, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  proBadgeText: { color: '#0A0A0A', fontSize: 9, fontWeight: '900', letterSpacing: 1, fontFamily: 'ui-monospace' },
+  lockedReckoning: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  lockedContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  lockIcon: { fontSize: 28 },
+  lockedTitle: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '900', marginBottom: 2, fontFamily: 'ui-monospace' },
+  lockedSubtitle: { color: TEXT_SECONDARY, fontSize: 11, lineHeight: 16, fontFamily: 'ui-monospace' },
+  upgradeButton: { backgroundColor: GOLD, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 },
+  upgradeButtonText: { color: '#0A0A0A', fontSize: 11, fontWeight: '900', fontFamily: 'ui-monospace' },
+  generateButton: { backgroundColor: GOLD, borderRadius: 8, paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
+  generateButtonText: { color: '#0A0A0A', fontSize: 14, fontWeight: '900', letterSpacing: 2, fontFamily: 'ui-monospace' },
+  loadingContainerLarge: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 40, alignItems: 'center' },
+  loadingText: { color: GOLD, fontSize: 11, marginTop: 16, fontFamily: 'ui-monospace', fontWeight: '800' },
+  errorContainer: { backgroundColor: 'rgba(204, 0, 0, 0.05)', borderWidth: 1, borderColor: RED, borderRadius: 12, padding: 24, alignItems: 'center' },
+  errorText: { color: RED, fontSize: 12, textAlign: 'center', marginBottom: 20, fontFamily: 'ui-monospace' },
+  retryButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6, paddingVertical: 12, paddingHorizontal: 24 },
+  retryButtonText: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '700', fontFamily: 'ui-monospace' },
+  newReckoningButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, paddingVertical: 16, alignItems: 'center', marginTop: 12 },
+  newReckoningButtonText: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '900', fontFamily: 'ui-monospace', letterSpacing: 2 },
 });
