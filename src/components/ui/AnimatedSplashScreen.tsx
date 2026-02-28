@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Image, StyleSheet, Dimensions } from 'react-native';
-import { MotiView } from 'moti';
 import { BASE } from '@/constants/theme';
+import { MotiView } from 'moti';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Image, StyleSheet, View } from 'react-native';
 
 interface AnimatedSplashScreenProps {
   onAnimationComplete: () => void;
@@ -58,7 +58,7 @@ export function AnimatedSplashScreen({ onAnimationComplete }: AnimatedSplashScre
             }}
           >
             <Image
-              source={require('@/assets/images/icon.png')}
+              source={require('@/assets/images/favicon.png')}
               style={styles.icon}
             />
           </MotiView>
@@ -74,7 +74,7 @@ export function AnimatedSplashScreen({ onAnimationComplete }: AnimatedSplashScre
             }}
           >
             <Image
-              source={require('@/assets/images/logo.png')}
+              source={require('@/assets/images/favicon.png')}
               style={styles.logo}
             />
           </MotiView>

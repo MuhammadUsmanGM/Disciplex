@@ -66,7 +66,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <MotiView {...createStaggerAnimation(0, 100)} style={styles.logoContainer}>
             <Image
-              source={require('@/assets/images/logo.png')}
+              source={require('@/assets/images/favicon.png')}
               style={styles.logo}
               resizeMode="contain"
             />

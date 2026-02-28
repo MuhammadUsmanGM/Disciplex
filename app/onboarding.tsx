@@ -226,7 +226,7 @@ function WelcomeStep({ onNext, onSignOut }: { onNext: () => void; onSignOut: () 
     <ScrollView contentContainerStyle={styles.stepContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.logoContainer}>
         <Image
-          source={require('@/assets/images/logo.png')}
+          source={require('@/assets/images/favicon.png')}
           style={styles.logo}
           resizeMode="contain"
         />
