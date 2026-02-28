@@ -65,9 +65,9 @@ export default function RootLayout() {
       }
     } else {
       // Logged in: must be in (tabs) or onboarding
-      if (inAuthGroup || (!inTabsGroup && !inOnboarding)) {
+      if (inAuthGroup || (!inTabsGroup && !inOnboarding && rootSegment !== 'vetting')) {
         if (onboardingComplete) {
-          router.replace('/(tabs)');
+          router.replace('/vetting' as any);
         } else {
           router.replace('/onboarding');
         }
@@ -96,6 +96,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="vetting" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="light" />

@@ -139,6 +139,25 @@ export const Fonts = {
   serif: 'ui-serif', // Rarely used
 };
 
+// Icon Configuration
+export const ICON_SIZES = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const ICON_COLORS = {
+  primary: TEXT_PRIMARY,
+  secondary: TEXT_SECONDARY,
+  muted: TEXT_MUTED,
+  gold: GOLD,
+  red: RED,
+  success: SUCCESS,
+  warning: WARNING,
+};
+
 // Score Color Coding (per spec Section 6)
 export function getScoreColor(score: number): string {
   if (score >= 75) return GOLD;

@@ -8,6 +8,8 @@ const SOUND_ASSETS = {
   ALERT: 'https://cdn.pixabay.com/audio/2022/10/24/audio_34b655f46a.mp3', // Dissonant system warning
   TYPEWRITER: 'https://cdn.pixabay.com/audio/2022/03/10/audio_f542167d46.mp3', // Mechanical print chirp
   COMPLETE: 'https://cdn.pixabay.com/audio/2022/03/15/audio_4a44b9ffdc.mp3', // High-end pulse
+  SCAN: 'https://cdn.pixabay.com/audio/2022/03/24/audio_349a175af4.mp3', // High-freq data scan
+  ACCESS: 'https://cdn.pixabay.com/audio/2022/03/24/audio_92425642d2.mp3', // Heavy lock disengage
 };
 
 type SoundType = keyof typeof SOUND_ASSETS;

@@ -14,6 +14,7 @@ import {
     ChevronRight,
     Clock,
     Crown,
+    Fingerprint,
     Flame,
     History,
     Home,
@@ -24,6 +25,7 @@ import {
     Play,
     Plus,
     RefreshCw,
+    Scan,
     Settings,
     Share2,
     Shield,
@@ -38,41 +40,37 @@ import {
     X,
     Zap,
 } from 'lucide-react-native';
+import React from 'react';
 
-// Icon sizes
-export const ICON_SIZES = {
-  xs: 12,
-  sm: 16,
-  md: 20,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-};
+import { ICON_COLORS, ICON_SIZES } from '@/constants/theme';
 
-// Icon colors (matching theme)
-export const ICON_COLORS = {
-  primary: '#F5F5F5',
-  secondary: '#888888',
-  muted: '#3A3A3A',
-  gold: '#C9A84C',
-  red: '#CC0000',
-  success: '#2A7A4B',
-  warning: '#8A6A00',
-};
-
-// Icon props interface
-export interface IconProps {
+interface IconProps {
   size?: number;
   color?: string;
-  strokeWidth?: number;
 }
 
-// Navigation Icons (for tab bar)
+/**
+ * Category-based Icon Registry
+ */
+
+// Navigation Icons
 export const NavIcons = {
   Home: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
     <Home size={size} color={color} strokeWidth={2} />
   ),
+  HomeActive: ({ size = ICON_SIZES.md, color = ICON_COLORS.gold }: IconProps) => (
+    <Home size={size} color={color} strokeWidth={2} />
+  ),
+  History: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
+    <Clock size={size} color={color} strokeWidth={2} />
+  ),
+  HistoryActive: ({ size = ICON_SIZES.md, color = ICON_COLORS.gold }: IconProps) => (
+    <Clock size={size} color={color} strokeWidth={2} />
+  ),
   Insights: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
+    <BarChart3 size={size} color={color} strokeWidth={2} />
+  ),
+  InsightsActive: ({ size = ICON_SIZES.md, color = ICON_COLORS.gold }: IconProps) => (
     <BarChart3 size={size} color={color} strokeWidth={2} />
   ),
   Identity: ({ size = ICON_SIZES.md, color = ICON_COLORS.secondary }: IconProps) => (
@@ -118,6 +116,12 @@ export const ActionIcons = {
   Trash: ({ size = ICON_SIZES.sm, color = ICON_COLORS.red }: IconProps) => (
     <Trash2 size={size} color={color} strokeWidth={2} />
   ),
+  Fingerprint: ({ size = ICON_SIZES.md, color = ICON_COLORS.gold }: IconProps) => (
+    <Fingerprint size={size} color={color} strokeWidth={1.5} />
+  ),
+  Scan: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Scan size={size} color={color} strokeWidth={2} />
+  ),
 };
 
 // Status Icons
@@ -136,16 +140,19 @@ export const StatusIcons = {
   ),
 };
 
-// Feature Icons
+// Feature-Specific Icons
 export const FeatureIcons = {
-  Crown: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
-    <Crown size={size} color={color} strokeWidth={2} />
+  Target: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Target size={size} color={color} strokeWidth={2} />
   ),
   Trophy: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
     <Trophy size={size} color={color} strokeWidth={2} />
   ),
-  Target: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
-    <Target size={size} color={color} strokeWidth={2} />
+  Zap: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Zap size={size} color={color} strokeWidth={2} />
+  ),
+  Crown: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Crown size={size} color={color} strokeWidth={2} />
   ),
   TrendingUp: ({ size = ICON_SIZES.lg, color = ICON_COLORS.success }: IconProps) => (
     <TrendingUp size={size} color={color} strokeWidth={2} />
@@ -153,11 +160,11 @@ export const FeatureIcons = {
   TrendingDown: ({ size = ICON_SIZES.lg, color = ICON_COLORS.red }: IconProps) => (
     <TrendingDown size={size} color={color} strokeWidth={2} />
   ),
-  Zap: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
-    <Zap size={size} color={color} strokeWidth={2} />
-  ),
   Star: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
     <Star size={size} color={color} strokeWidth={2} />
+  ),
+  Scan: ({ size = ICON_SIZES.lg, color = ICON_COLORS.gold }: IconProps) => (
+    <Scan size={size} color={color} strokeWidth={2} />
   ),
   Alert: ({ size = ICON_SIZES.lg, color = ICON_COLORS.red }: IconProps) => (
     <AlertCircle size={size} color={color} strokeWidth={2} />
