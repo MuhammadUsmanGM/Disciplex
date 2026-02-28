@@ -420,6 +420,17 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Data</Text>
 
           <View style={styles.card}>
+            <PressableRow onPress={() => router.push('/(tabs)/settings/reckoning-archive' as never)}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Reckoning Archive</Text>
+                <Text style={styles.settingHint}>
+                  {isPro ? 'View all past verdicts' : 'Pro feature'}
+                </Text>
+              </View>
+              {!isPro && <View style={styles.proBadgeSmall}><Text style={styles.proBadgeText}>PRO</Text></View>}
+              <Text style={styles.chevron}>›</Text>
+            </PressableRow>
+            <View style={styles.separator} />
             <PressableRow onPress={handleExportData}>
               <Text style={styles.rowLabel}>Export My Data</Text>
               <Text style={styles.rowHint}>Download all your habits and scores</Text>
@@ -646,6 +657,20 @@ const styles = StyleSheet.create({
     color: '#0A0A0A',
     fontSize: 13,
     fontWeight: '700',
+  },
+  proBadgeSmall: {
+    backgroundColor: GOLD,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  proBadgeText: {
+    color: '#0A0A0A',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+    fontFamily: 'ui-monospace',
   },
 
   // Setting Row
