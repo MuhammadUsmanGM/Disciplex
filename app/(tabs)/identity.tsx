@@ -297,7 +297,7 @@ export default function IdentityScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: BASE,
   },
   scroll: {
     flex: 1,

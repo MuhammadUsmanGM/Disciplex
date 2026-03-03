@@ -130,35 +130,34 @@ export function ShareCardWrapper({ score, verdictExcerpt, children, isPro = fals
         options={{ format: 'png', quality: 1.0 }}
         style={styles.offscreen}
       >
-          <View style={styles.card}>
-            {/* Corner Markers */}
-            <View style={[styles.corner, { top: 40, left: 40, borderTopWidth: 2, borderLeftWidth: 2 }]} />
-            <View style={[styles.corner, { top: 40, right: 40, borderTopWidth: 2, borderRightWidth: 2 }]} />
-            <View style={[styles.corner, { bottom: 40, left: 40, borderBottomWidth: 2, borderLeftWidth: 2 }]} />
-            <View style={[styles.corner, { bottom: 40, right: 40, borderBottomWidth: 2, borderRightWidth: 2 }]} />
+        <View style={styles.card}>
+          {/* Corner Markers */}
+          <View style={[styles.corner, { top: 40, left: 40, borderTopWidth: 2, borderLeftWidth: 2 }]} />
+          <View style={[styles.corner, { top: 40, right: 40, borderTopWidth: 2, borderRightWidth: 2 }]} />
+          <View style={[styles.corner, { bottom: 40, left: 40, borderBottomWidth: 2, borderLeftWidth: 2 }]} />
+          <View style={[styles.corner, { bottom: 40, right: 40, borderBottomWidth: 2, borderRightWidth: 2 }]} />
 
-            <View style={styles.recordHeader}>
-              <Text style={styles.recordId}>RECORD ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</Text>
-              <Text style={styles.recordId}>{new Date().toISOString().split('T')[0]}</Text>
-            </View>
-
-            <Text style={[styles.score, { color }]}>{Math.round(score)}</Text>
-            <Text style={[styles.label, { color }]}>{label}</Text>
-
-            <View style={styles.divider} />
-
-            <Text style={styles.verdict}>
-              {verdictExcerpt || "Identity claim tested. Behavioral alignment confirmed. System log entry persistent."}
-            </Text>
-
-            <View style={styles.footer}>
-              <View style={styles.footerLine} />
-              <Text style={styles.wordmark}>DISCIPLEX OS // PERFORMANCE REPORT</Text>
-              <View style={styles.footerLine} />
-            </View>
+          <View style={styles.recordHeader}>
+            <Text style={styles.recordId}>RECORD ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</Text>
+            <Text style={styles.recordId}>{new Date().toISOString().split('T')[0]}</Text>
           </View>
-        </ViewShot>
-      </View>
+
+          <Text style={[styles.score, { color }]}>{Math.round(score)}</Text>
+          <Text style={[styles.label, { color }]}>{label}</Text>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.verdict}>
+            {verdictExcerpt || "Identity claim tested. Behavioral alignment confirmed. System log entry persistent."}
+          </Text>
+
+          <View style={styles.footer}>
+            <View style={styles.footerLine} />
+            <Text style={styles.wordmark}>DISCIPLEX OS // PERFORMANCE REPORT</Text>
+            <View style={styles.footerLine} />
+          </View>
+        </View>
+      </ViewShot>
 
       <Pressable onPress={handleShare} disabled={checking}>
         {children || (

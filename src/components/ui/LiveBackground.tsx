@@ -1,6 +1,7 @@
 import { BASE, GOLD_SUBTLE_2, RED_SUBTLE_2 } from '@/constants/theme';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
+import { Easing } from 'react-native-reanimated';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -60,7 +61,7 @@ export function LiveBackground() {
           duration: 5000,
           loop: true,
           repeatReverse: false,
-          easing: (t) => t, // Truly linear
+          easing: Easing.linear,
         }}
         style={styles.gridContainer}
         pointerEvents="none"

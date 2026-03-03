@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import {
+  BASE,
   BORDER,
   GOLD,
   RED,
@@ -640,7 +641,7 @@ const statStyles = StyleSheet.create({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: 'transparent' },
+  root: { flex: 1, backgroundColor: BASE },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
   header: { 

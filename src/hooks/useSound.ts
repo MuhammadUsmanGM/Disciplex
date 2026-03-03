@@ -21,7 +21,7 @@ export function useSound() {
     // Cleanup on unmount
     return () => {
       Object.values(sounds).forEach(sound => {
-        sound.unloadAsync();
+        sound.unloadAsync().catch(() => {});
       });
     };
   }, [sounds]);
@@ -39,11 +39,11 @@ export function useSound() {
         { uri: SOUND_ASSETS[type] },
         { shouldPlay: true, volume }
       );
-      
+
       setSounds(prev => ({ ...prev, [type]: sound }));
     } catch (error) {
-       // Silently fail to not break UI flow
-       console.log('Audio protocol failure:', error);
+      // Silently fail - audio is non-critical
+      // Common failures: CDN blocking, network issues, Expo Go limitations
     }
   };
 

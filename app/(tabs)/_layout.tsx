@@ -3,33 +3,33 @@ import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors, GOLD, SURFACE } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BASE, Colors, GOLD, SURFACE } from '@/constants/theme';
 import { LiveBackground } from '@/src/components/ui/LiveBackground';
 import { NavIcons } from '@/src/utils/icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme !== 'light';
+  // Force dark mode - Disciplex is always dark
+  const isDark = true;
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: BASE }} edges={['bottom']}>
       <LiveBackground />
       <Tabs
       screenOptions={{
         tabBarActiveTintColor: GOLD,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        tabBarInactiveTintColor: Colors.dark.tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: isDark ? SURFACE : '#FFFFFF',
+          backgroundColor: SURFACE,
           borderTopColor: 'transparent',
           borderTopWidth: 0,
           borderBottomWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 70,
           paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingTop: 12,
-          paddingHorizontal: 16,
+          paddingTop: 8,
+          paddingHorizontal: 4,
           marginHorizontal: 16,
           marginBottom: Platform.OS === 'ios' ? 15 : 12,
           borderRadius: 20,
@@ -44,19 +44,19 @@ export default function TabLayout() {
           bottom: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          marginTop: 6,
+          fontSize: 9,
+          fontWeight: '700',
+          marginTop: 4,
           fontFamily: 'ui-monospace',
-          letterSpacing: 0.3,
+          letterSpacing: 0.5,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 2,
         },
         tabBarBackground: () => (
           <View style={[
             styles.tabBarBackground,
-            { backgroundColor: isDark ? SURFACE : '#FFFFFF' }
+            { backgroundColor: SURFACE }
           ]} />
         ),
       }}
@@ -88,7 +88,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="identity"
         options={{
-          title: 'Identity Debt',
+          title: 'Debt',
           tabBarIcon: ({ color, focused }) => (
             <NavIcons.Debt
               size={24}
@@ -110,7 +110,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </View>
+    </SafeAreaView>
   );
 }
 

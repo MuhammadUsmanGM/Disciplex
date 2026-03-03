@@ -1,12 +1,16 @@
 /**
  * Disciplex Notification System
  * Handles Weekly Reckoning and Milestone notifications
- * 
+ *
  * Reference: disciplex.md Section 9 - Retention Strategy
  */
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { Constants } from 'expo-constants';
+
+// Check if running in Expo Go (limited notification support)
+const IS_EXPO_GO = !!Constants.expoConfig;
 
 // Notification channel IDs (Android)
 const RECKONING_CHANNEL_ID = 'weekly-reckoning';
@@ -21,6 +25,12 @@ const MILESTONE_7DAY_NOTIFICATION_ID = 'milestone-7day';
  * Call this on app start
  */
 export async function configureNotifications(): Promise<void> {
+  // Skip full setup in Expo Go (limited support)
+  if (IS_EXPO_GO) {
+    console.log('Notifications: Running in Expo Go with limited functionality');
+    return;
+  }
+
   // Set notification handler to show notifications even when app is in foreground
   Notifications.setNotificationHandler({
     handleNotification: async () => ({

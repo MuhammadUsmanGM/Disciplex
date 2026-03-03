@@ -1,56 +1,126 @@
 {
   "expo": {
     "name": "Disciplex",
-    "slug": "Disciplex",
+    "slug": "disciplex",
     "version": "1.0.0",
+    "description": "The AI Discipline Operating System. A behavioral measurement system that quantifies the gap between who you claim to be and what your actions prove you are.",
     "orientation": "portrait",
-    "icon": "./assets/images/favicon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "disciplex",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "primaryColor": "#C9A84C",
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/images/favicon.png"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.disciplex.app",
+      "buildNumber": "1",
+      "minimumOSVersion": "15.0",
+      "infoPlist": {
+        "NSUserNotificationUsageDescription": "Disciplex sends weekly performance verdicts every Sunday at your chosen time.",
+        "NSFaceIDUsageDescription": "Disciplex uses Face ID to secure your identity data.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
+      },
+      "associatedDomains": [
+        "applinks:disciplex.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0A",
-        "foregroundImage": "./assets/images/favicon.png",
-        "monochromeImage": "./assets/images/favicon.png"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/monochrome-icon.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "icon": "./assets/images/favicon.png"
+      "icon": "./assets/images/icon.png",
+      "package": "com.disciplex.app",
+      "versionCode": 1,
+      "minSdkVersion": 26,
+      "targetSdkVersion": 34,
+      "permissions": [
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "disciplex.app"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro",
+      "name": "Disciplex — Identity Operating System"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/favicon.png",
+          "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#0A0A0A",
           "dark": {
-            "backgroundColor": "#0A0A0A"
+            "backgroundColor": "#0A0A0A",
+            "image": "./assets/images/splash-icon.png"
           }
         }
       ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/favicon.png",
+          "icon": "./assets/images/notification-icon.png",
           "color": "#C9A84C",
-          "sounds": []
+          "sounds": [],
+          "androidMode": "default",
+          "androidCollapsedTitle": "Disciplex Reckoning"
         }
       ],
+      "expo-secure-store",
       "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    },
+    "owner": "your-expo-account",
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "notification": {
+      "icon": "./assets/images/notification-icon.png",
+      "color": "#C9A84C",
+      "iosDisplayInForeground": true,
+      "androidMode": "default"
+    },
+    "privacy": "public",
+    "githubUrl": "https://github.com/MuhammadUsmanGM/Disciplex"
   }
 }

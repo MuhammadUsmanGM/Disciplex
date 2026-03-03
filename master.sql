@@ -62,6 +62,17 @@ create table if not exists scores (
   unique(user_id, date)
 );
 
+-- Debt Ledger: Track identity debt changes over time
+create table if not exists debt_ledger (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references users(id) on delete cascade not null,
+  date date not null,
+  type text not null check (type in ('miss', 'late', 'penalty', 'clearance')),
+  label text not null,
+  amount int not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Reckonings table: Weekly AI-generated verdicts and directives
 create table if not exists reckonings (
   id uuid default uuid_generate_v4() primary key,
@@ -102,6 +113,11 @@ create index if not exists idx_scores_user_date on scores(user_id, date desc);
 create index if not exists idx_reckonings_user_id on reckonings(user_id);
 create index if not exists idx_reckonings_week_start on reckonings(week_start);
 create index if not exists idx_reckonings_user_week on reckonings(user_id, week_start desc);
+
+-- Debt Ledger indexes
+create index if not exists idx_debt_ledger_user_id on debt_ledger(user_id);
+create index if not exists idx_debt_ledger_date on debt_ledger(date);
+create index if not exists idx_debt_ledger_user_date on debt_ledger(user_id, date desc);
 
 -- =====================================================
 -- 3. DATA VALIDATION CONSTRAINTS
@@ -269,6 +285,17 @@ create policy "Users can insert own reckonings" on reckonings
   for insert
   with check (auth.uid() = user_id);
 
+-- ===== DEBT LEDGER POLICIES =====
+drop policy if exists "Users can view own debt ledger" on debt_ledger;
+create policy "Users can view own debt ledger" on debt_ledger
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own debt ledger" on debt_ledger;
+create policy "Users can insert own debt ledger" on debt_ledger
+  for insert
+  with check (auth.uid() = user_id);
+
 -- =====================================================
 -- 5. TRIGGERS AND FUNCTIONS
 -- =====================================================
@@ -334,12 +361,14 @@ select
   max(s.alignment_score) as max_alignment_score,
   min(s.alignment_score) as min_alignment_score,
   avg(s.identity_debt) as avg_identity_debt,
-  count(distinct r.id) as total_reckonings
+  count(distinct r.id) as total_reckonings,
+  sum(dl.amount) as total_debt_accumulated
 from users u
 left join habits h on h.user_id = u.id
 left join completions c on c.habit_id = h.id
 left join scores s on s.user_id = u.id
 left join reckonings r on r.user_id = u.id
+left join debt_ledger dl on dl.user_id = u.id
 group by u.id, u.email, u.identity_claim;
 
 -- View: Recent activity (last 7 days)
@@ -367,6 +396,7 @@ returns void as $$
 begin
   -- Delete in order respecting foreign keys
   delete from reckonings where user_id = p_user_id;
+  delete from debt_ledger where user_id = p_user_id;
   delete from scores where user_id = p_user_id;
   delete from completions where habit_id in (select id from habits where user_id = p_user_id);
   delete from habits where user_id = p_user_id;
@@ -384,6 +414,7 @@ comment on table users is 'User profiles with identity claims and preferences';
 comment on table habits is 'User-defined habits with non-negotiable flags';
 comment on table completions is 'Daily habit completion records';
 comment on table scores is 'Daily calculated scores using the 8-step scoring engine';
+comment on table debt_ledger is 'Identity debt transaction ledger';
 comment on table reckonings is 'Weekly AI-generated verdicts and directives';
 
 comment on column users.identity_claim is 'The identity the user is committing to become';
@@ -409,7 +440,7 @@ comment on column reckonings.directive is 'Single actionable instruction for nex
 -- SETUP COMPLETE
 -- =====================================================
 -- Your Disciplex database is now fully configured with:
--- ✓ 5 tables (users, habits, completions, scores, reckonings)
+-- ✓ 6 tables (users, habits, completions, scores, debt_ledger, reckonings)
 -- ✓ Performance indexes on all foreign keys
 -- ✓ Row Level Security (RLS) policies
 -- ✓ Auto-create user profile on signup trigger

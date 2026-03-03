@@ -1,11 +1,12 @@
 /**
  * Disciplex Payment System — RevenueCat Integration
  * Handles Pro Tier subscriptions ($9.99/month or $79.99/year)
- * 
+ *
  * Reference: disciplex.md Section 7 - Monetization Strategy
  */
 
 import { Platform } from 'react-native';
+import { Constants } from 'expo-constants';
 import Purchases, {
   CustomerInfo,
   PACKAGE_TYPE,
@@ -41,8 +42,14 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
     return;
   }
 
+  // Skip RevenueCat in Expo Go (native modules not available)
+  if (Constants.expoConfig) {
+    console.log('RevenueCat: Skipping initialization in Expo Go. Use a development build.');
+    return;
+  }
+
   if (!REVENUECAT_API_KEY) {
-    console.warn('EXPO_PUBLIC_REVENUECAT_API_KEY not configured. Payments will not work.');
+    console.log('RevenueCat: API key not configured.');
     return;
   }
 
@@ -54,7 +61,8 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
     });
     console.log('RevenueCat initialized for user:', userId);
   } catch (error) {
-    console.error('Failed to initialize RevenueCat:', error);
+    // Silently fail in development
+    console.log('RevenueCat: Initialization skipped (Expo Go or invalid key)');
   }
 }
 

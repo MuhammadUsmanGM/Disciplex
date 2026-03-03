@@ -9,6 +9,7 @@ export interface Habit {
   is_non_negotiable: boolean;
   weight: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Completion {
@@ -28,7 +29,17 @@ export interface HabitWithCompletion extends Habit {
 export interface DebtEntry {
   id: string;
   date: string;
-  type: 'miss' | 'late' | 'penalty';
+  type: 'miss' | 'late' | 'penalty' | 'clearance';
   label: string;
   amount: number;
+}
+
+export interface DebtLedger {
+  id: string;
+  user_id: string;
+  date: string;
+  type: 'miss' | 'late' | 'penalty' | 'clearance';
+  label: string;
+  amount: number;
+  created_at: string;
 }
