@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
+    BASE,
     BORDER,
     GLASS_BORDER,
     GLASS_SURFACE,
@@ -23,6 +24,7 @@ import { useTheme } from '@/src/contexts/ThemeContext';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import { useSubscription } from '@/src/hooks/useSubscription';
 import { supabase } from '@/src/lib/supabase';
+import { logger, error as logError } from '@/src/utils/logger';
 import { useHabitStore } from '@/src/store/useHabitStore';
 
 
@@ -78,7 +80,7 @@ export default function SettingsScreen() {
           }
         }
       } catch (error) {
-        console.error('Failed to load user data:', error);
+        logError('Failed to load user data', error as Error);
       }
     };
     loadUserData();
@@ -117,7 +119,7 @@ export default function SettingsScreen() {
         }
       }
     } catch (error) {
-      console.error('Failed to save reckoning time:', error);
+      logError('Failed to save reckoning time', error as Error);
       Alert.alert('Error', 'Failed to save preference');
     } finally {
       setIsSaving(false);
@@ -149,14 +151,11 @@ export default function SettingsScreen() {
       const onboardingData = await AsyncStorage.getItem('onboarding_data');
       const allKeys = await AsyncStorage.getAllKeys();
 
-      console.log('Exporting data...', {
-        onboarding: onboardingData,
-        totalKeys: allKeys.length,
-      });
+      logger.debug('Exporting data', { onboarding: onboardingData, totalKeys: allKeys.length });
 
       Alert.alert('Export', 'Data export coming in next update. For now, check console for debug output.');
     } catch (error) {
-      console.error('Export error:', error);
+      logError('Export error', error as Error);
       Alert.alert('Error', 'Failed to export data');
     }
   };
@@ -167,7 +166,7 @@ export default function SettingsScreen() {
       await AsyncStorage.removeItem('onboarding_data');
       Alert.alert('Reset', 'Onboarding reset. Restart the app to begin again.');
     } catch (error) {
-      console.error('Reset error:', error);
+      logError('Reset error', error as Error);
       Alert.alert('Error', 'Failed to reset onboarding');
     }
   };
@@ -210,7 +209,7 @@ export default function SettingsScreen() {
               await supabase.auth.signOut();
               router.replace('/(auth)/login');
             } catch (error) {
-              console.error('Delete error:', error);
+              logError('Delete error', error as Error);
               Alert.alert('Error', 'Failed to delete data');
             }
           }
@@ -253,7 +252,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Identity Contract</Text>
           <TouchableOpacity
             style={styles.card}
-            onPress={() => router.push('/(tabs)/identity' as never)}
+            onPress={() => router.push('/(tabs)/identity')}
           >
             <View style={styles.identityCard}>
               <View style={styles.identityHeader}>
@@ -261,7 +260,7 @@ export default function SettingsScreen() {
                 <Text style={styles.chevron}>View Deep Analysis ›</Text>
               </View>
               <Text style={styles.identityClaimText} numberOfLines={2}>
-                "{identityClaim || 'No identity claim set'}"
+                {`"${identityClaim || 'No identity claim set'}"`}
               </Text>
               <View style={styles.identityStats}>
                  <View style={styles.statMini}>
@@ -485,7 +484,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Preferences</Text>
 
           <View style={styles.card}>
-            <PressableRow onPress={() => router.push('/(tabs)/settings/manage-habits' as never)}>
+            <PressableRow onPress={() => router.push('/(tabs)/settings/manage-habits')}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Manage Habits</Text>
                 <Text style={styles.settingHint}>
@@ -520,7 +519,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Data</Text>
 
           <View style={styles.card}>
-            <PressableRow onPress={() => router.push('/(tabs)/settings/reckoning-archive' as never)}>
+            <PressableRow onPress={() => router.push('/(tabs)/settings/reckoning-archive')}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Reckoning Archive</Text>
                 <Text style={styles.settingHint}>

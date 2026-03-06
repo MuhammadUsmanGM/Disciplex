@@ -6,6 +6,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { PACKAGE_TYPE } from 'react-native-purchases';
 
+import { logger, error as logError } from '@/src/utils/logger';
 import {
   getSubscriptionStatus,
   initializeRevenueCat,
@@ -50,7 +51,7 @@ export function useSubscription(): UseSubscriptionReturn {
       const status = await getSubscriptionStatus();
       setSubscriptionStatus(status);
     } catch (error) {
-      console.error('Failed to refresh subscription status:', error);
+      logError('Failed to refresh subscription status', error as Error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,7 @@ export function useSubscription(): UseSubscriptionReturn {
   const restore = useCallback(async (): Promise<boolean> => {
     try {
       const customerInfo = await restorePurchases();
-      
+
       if (customerInfo) {
         const activeEntitlements = Object.keys(customerInfo.entitlements.active);
         if (activeEntitlements.length > 0) {
@@ -117,10 +118,10 @@ export function useSubscription(): UseSubscriptionReturn {
           return true;
         }
       }
-      
+
       return false;
     } catch (error) {
-      console.error('Restore failed:', error);
+      logError('Restore failed', error as Error);
       return false;
     }
   }, [refreshStatus]);

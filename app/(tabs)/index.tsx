@@ -168,7 +168,7 @@ export default function HomeScreen() {
             >
               <Pressable
                 style={styles.debtAlertCard}
-                onPress={() => router.push('/(tabs)/identity' as any)}
+                onPress={() => router.push('/(tabs)/identity')}
               >
                 <View style={styles.debtAlertHeader}>
                   <MotiView

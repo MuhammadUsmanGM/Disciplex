@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { calculateDailyScore, updateDebt } from '@/src/lib/scoring';
-import { supabase, executeQuery } from '@/src/lib/supabase';
+import { supabase } from '@/src/lib/supabase';
 import { Completion, DebtEntry, Habit, ScoreHistoryEntry } from '@/src/types';
 import { logger, trackError, startPerformanceMark, endPerformanceMark } from '@/src/utils/logger';
 import { validateScoreHistory } from '@/src/utils/validation';
@@ -94,14 +94,11 @@ export const useHabitStore = create<HabitState>()(
           }
 
           // Fetch all habits with retry
-          const { data: habits, error: habitsError } = await executeQuery(
-            supabase
-              .from('habits')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: true }),
-            'Fetch habits'
-          );
+          const { data: habits, error: habitsError } = await supabase
+            .from('habits')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true });
 
           if (habitsError || !habits) {
             logger.error('[HABIT_STORE] Failed to fetch habits', habitsError as Error);
@@ -118,27 +115,21 @@ export const useHabitStore = create<HabitState>()(
           const habitIds = habits.map((h) => h.id);
 
           // Fetch all completions
-          const { data: completions, error: completionsError } = await executeQuery(
-            supabase
-              .from('completions')
-              .select('*')
-              .in('habit_id', habitIds),
-            'Fetch completions'
-          );
+          const { data: completions, error: completionsError } = await supabase
+            .from('completions')
+            .select('*')
+            .in('habit_id', habitIds);
 
           if (completionsError) {
             logger.error('[HABIT_STORE] Failed to fetch completions', completionsError as Error);
           }
 
           // Fetch all scores
-          const { data: scores, error: scoresError } = await executeQuery(
-            supabase
-              .from('scores')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('date', { ascending: true }),
-            'Fetch scores'
-          );
+          const { data: scores, error: scoresError } = await supabase
+            .from('scores')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: true });
 
           if (scoresError) {
             logger.error('[HABIT_STORE] Failed to fetch scores', scoresError as Error);
@@ -159,15 +150,12 @@ export const useHabitStore = create<HabitState>()(
           const latestDebt = scoreHistory.length > 0 ? scoreHistory[scoreHistory.length - 1].identityDebt : 0;
 
           // Fetch debt entries
-          const { data: debtEntries, error: debtError } = await executeQuery(
-            supabase
-              .from('debt_ledger')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('date', { ascending: false })
-              .limit(50),
-            'Fetch debt ledger'
-          );
+          const { data: debtEntries, error: debtError } = await supabase
+            .from('debt_ledger')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false })
+            .limit(50);
 
           if (debtError) {
             logger.error('[HABIT_STORE] Failed to fetch debt entries', debtError as Error);

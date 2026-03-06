@@ -1,5 +1,6 @@
 import { useSound } from '@/src/hooks/useSound';
 import { supabase } from '@/src/lib/supabase';
+import { logger, error as logError } from '@/src/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -87,7 +88,7 @@ export default function OnboardingScreen() {
           .single();
         if (data?.identity_claim) {
           await AsyncStorage.setItem('onboarding_complete', 'true');
-          router.replace('/(tabs)' as never);
+          router.replace('/(tabs)');
         }
       }
     };
@@ -96,7 +97,7 @@ export default function OnboardingScreen() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.replace('/(auth)/login' as never);
+    router.replace('/(auth)/login');
   };
 
   const handleComplete = async () => {
@@ -128,9 +129,9 @@ export default function OnboardingScreen() {
       if (habitsError) throw habitsError;
 
       await AsyncStorage.setItem('onboarding_complete', 'true');
-      router.replace('/(tabs)' as never);
+      router.replace('/(tabs)');
     } catch (error) {
-      console.error('Error during onboarding save:', error);
+      logError('Error during onboarding save', error as Error);
       alert('Failed to save your identity. Please try again.');
     } finally {
       setSaving(false);

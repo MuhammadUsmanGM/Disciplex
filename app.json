@@ -121,6 +121,11 @@
       "androidMode": "default"
     },
     "privacy": "public",
-    "githubUrl": "https://github.com/MuhammadUsmanGM/Disciplex"
+    "githubUrl": "https://github.com/MuhammadUsmanGM/Disciplex",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#0A0A0A",
+      "translucent": true
+    }
   }
 }

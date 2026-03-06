@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import {
+    BASE,
     GOLD,
     GOLD_SUBTLE,
     RED,

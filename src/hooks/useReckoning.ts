@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 
+import { logger, error as logError } from '@/src/utils/logger';
 import { generateWeeklyReckoning, detectPrimaryBottleneck, calculateWeekTrend, getMostMissedHabit } from '@/src/lib/ai';
 import { ReckoningPayload, ReckoningResult } from '@/src/types/reckoning';
 
@@ -45,7 +46,7 @@ export function useReckoning(): UseReckoningReturn {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to generate Weekly Reckoning';
         setError(errorMessage);
-        console.error('Reckoning generation error:', err);
+        logError('Reckoning generation error', err as Error);
       } finally {
         setLoading(false);
       }

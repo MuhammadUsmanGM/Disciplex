@@ -7,6 +7,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 
 import { BASE, BORDER, GOLD, RED, SURFACE, TEXT_PRIMARY, TEXT_SECONDARY } from '@/constants/theme';
+import { logger, error as logError, trackError } from '@/src/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -30,7 +31,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logError('ErrorBoundary caught an error', error, { componentStack: errorInfo.componentStack });
+    trackError(error, {
+      componentStack: errorInfo.componentStack,
+    });
     this.props.onError?.(error, errorInfo);
   }
 

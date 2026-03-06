@@ -168,8 +168,7 @@ export const NOTIFICATION_CONFIG = {
 // EXPORTS
 // ============================================
 
-export { config as default, config };
-export type { AppConfig };
+export default config;
 
 // ============================================
 // HELPER FUNCTIONS
@@ -197,6 +196,7 @@ export function getApiBaseUrl(): string {
 }
 
 export function getFeatureFlag(flag: string): boolean {
+  // eslint-disable-next-line expo/no-dynamic-env-var
   const flagValue = process.env[`EXPO_PUBLIC_${flag.toUpperCase()}`];
   return flagValue === 'true';
 }

@@ -91,7 +91,7 @@ export default function RegisterScreen() {
     if (error) {
       setErrorMsg(error.message);
     } else {
-      router.replace('/onboarding' as never);
+      router.replace('/onboarding');
     }
   };
 
@@ -238,7 +238,7 @@ export default function RegisterScreen() {
           </MotiView>
 
           <MotiView {...createStaggerAnimation(7, 80)}>
-            <Pressable style={styles.linkButton} onPress={() => router.replace('/(auth)/login' as never)}>
+            <Pressable style={styles.linkButton} onPress={() => router.replace('/(auth)/login')}>
               <Text style={styles.linkText}>Active profile exists? Authenticate here.</Text>
             </Pressable>
           </MotiView>

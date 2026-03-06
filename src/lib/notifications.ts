@@ -7,10 +7,12 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { Constants } from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+
+import { logger, error as logError } from '@/src/utils/logger';
 
 // Check if running in Expo Go (limited notification support)
-const IS_EXPO_GO = !!Constants.expoConfig;
+const IS_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 // Notification channel IDs (Android)
 const RECKONING_CHANNEL_ID = 'weekly-reckoning';
@@ -27,7 +29,7 @@ const MILESTONE_7DAY_NOTIFICATION_ID = 'milestone-7day';
 export async function configureNotifications(): Promise<void> {
   // Skip full setup in Expo Go (limited support)
   if (IS_EXPO_GO) {
-    console.log('Notifications: Running in Expo Go with limited functionality');
+    logger.debug('Notifications: Running in Expo Go with limited functionality');
     return;
   }
 
@@ -97,7 +99,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
     return status === 'granted';
   } catch (error) {
-    console.error('Failed to request notification permission:', error);
+    logError('Failed to request notification permission', error as Error);
     return false;
   }
 }
@@ -110,7 +112,7 @@ export async function checkNotificationPermission(): Promise<boolean> {
     const { status } = await Notifications.getPermissionsAsync();
     return status === 'granted';
   } catch (error) {
-    console.error('Failed to check notification permission:', error);
+    logError('Failed to check notification permission', error as Error);
     return false;
   }
 }
@@ -131,9 +133,9 @@ export async function scheduleWeeklyReckoning(
     await Notifications.cancelScheduledNotificationAsync(RECKONING_NOTIFICATION_ID);
 
     const [hours, minutes] = time.split(':').map(Number);
-    
+
     if (isNaN(hours) || isNaN(minutes)) {
-      console.error('Invalid time format:', time);
+      logError('Invalid time format', new Error(`Invalid time: ${time}`), { time });
       return null;
     }
 
@@ -167,10 +169,10 @@ export async function scheduleWeeklyReckoning(
       },
     });
 
-    console.log('Weekly Reckoning scheduled:', notificationId, 'for', triggerDate);
+    logger.info(`Weekly Reckoning scheduled: ${notificationId} for ${triggerDate.toISOString()}`);
     return notificationId;
   } catch (error) {
-    console.error('Failed to schedule weekly reckoning:', error);
+    logError('Failed to schedule weekly reckoning', error as Error);
     return null;
   }
 }
@@ -181,9 +183,9 @@ export async function scheduleWeeklyReckoning(
 export async function cancelWeeklyReckoning(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(RECKONING_NOTIFICATION_ID);
-    console.log('Weekly Reckoning notification cancelled');
+    logger.debug('Weekly Reckoning notification cancelled');
   } catch (error) {
-    console.error('Failed to cancel weekly reckoning:', error);
+    logError('Failed to cancel weekly reckoning', error as Error);
   }
 }
 
@@ -222,10 +224,10 @@ export async function schedule7DayMilestone(): Promise<string | null> {
       },
     });
 
-    console.log('7-day milestone scheduled:', notificationId);
+    logger.info(`7-day milestone scheduled: ${notificationId}`);
     return notificationId;
   } catch (error) {
-    console.error('Failed to schedule 7-day milestone:', error);
+    logError('Failed to schedule 7-day milestone', error as Error);
     return null;
   }
 }
@@ -236,9 +238,9 @@ export async function schedule7DayMilestone(): Promise<string | null> {
 export async function cancel7DayMilestone(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(MILESTONE_7DAY_NOTIFICATION_ID);
-    console.log('7-day milestone notification cancelled');
+    logger.debug('7-day milestone notification cancelled');
   } catch (error) {
-    console.error('Failed to cancel 7-day milestone:', error);
+    logError('Failed to cancel 7-day milestone', error as Error);
   }
 }
 
@@ -264,7 +266,7 @@ export async function sendImmediateNotification(
       trigger: null, // Send immediately
     });
   } catch (error) {
-    console.error('Failed to send immediate notification:', error);
+    logError('Failed to send immediate notification', error as Error);
   }
 }
 
@@ -275,7 +277,7 @@ export async function getScheduledNotifications(): Promise<Notifications.Notific
   try {
     return await Notifications.getAllScheduledNotificationsAsync();
   } catch (error) {
-    console.error('Failed to get scheduled notifications:', error);
+    logError('Failed to get scheduled notifications', error as Error);
     return [];
   }
 }
@@ -286,9 +288,9 @@ export async function getScheduledNotifications(): Promise<Notifications.Notific
 export async function cancelAllNotifications(): Promise<void> {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    console.log('All notifications cancelled');
+    logger.debug('All notifications cancelled');
   } catch (error) {
-    console.error('Failed to cancel all notifications:', error);
+    logError('Failed to cancel all notifications', error as Error);
   }
 }
 

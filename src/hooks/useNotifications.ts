@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { logger } from '@/src/utils/logger';
 import {
     cancel7DayMilestone,
     cancelWeeklyReckoning,
@@ -67,7 +68,7 @@ export function useNotifications(): UseNotificationsReturn {
       // Check actual permission again to handle race conditions during toggle
       const hasPermission = await checkNotificationPermission();
       if (!hasPermission) {
-        console.warn('Cannot schedule reckoning: permission not granted');
+        logger.warn('Cannot schedule reckoning: permission not granted');
         return;
       }
 

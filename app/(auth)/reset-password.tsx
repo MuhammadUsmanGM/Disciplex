@@ -73,19 +73,19 @@ export default function PasswordResetScreen() {
 
           <Text style={styles.title}>Check Your Email</Text>
           <Text style={styles.subtitle}>
-            We've sent a password reset link to{' '}
+            We&apos;ve sent a password reset link to{' '}
             <Text style={styles.emailHighlight}>{email}</Text>
           </Text>
 
           <View style={styles.infoCard}>
             <Text style={styles.infoText}>
-              • Click the link in the email to reset your password
+              &bull; Click the link in the email to reset your password
             </Text>
             <Text style={styles.infoText}>
-              • Didn't receive it? Check your spam folder
+              &bull; Didn&apos;t receive it? Check your spam folder
             </Text>
             <Text style={styles.infoText}>
-              • The link expires after 24 hours
+              &bull; The link expires after 24 hours
             </Text>
           </View>
 
@@ -125,7 +125,7 @@ export default function PasswordResetScreen() {
         >
           <Text style={styles.title}>Reset Password</Text>
           <Text style={styles.subtitle}>
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </Text>
 
           <View style={styles.inputContainer}>

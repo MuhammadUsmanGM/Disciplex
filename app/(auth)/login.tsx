@@ -50,7 +50,7 @@ export default function LoginScreen() {
     if (error) {
       setErrorMsg(error.message);
     } else {
-      router.replace('/(tabs)' as never);
+      router.replace('/(tabs)');
     }
   };
 
@@ -129,14 +129,14 @@ export default function LoginScreen() {
           <MotiView {...createStaggerAnimation(4, 100)} style={styles.footer}>
             <Pressable
               style={styles.forgotPasswordButton}
-              onPress={() => router.push('/(auth)/reset-password' as never)}
+              onPress={() => router.push('/(auth)/reset-password')}
             >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </Pressable>
 
             <View style={styles.divider} />
 
-            <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register' as never)}>
+            <Pressable style={styles.linkButton} onPress={() => router.push('/(auth)/register')}>
               <Text style={styles.linkText}>Establish new identity profile</Text>
             </Pressable>
           </MotiView>

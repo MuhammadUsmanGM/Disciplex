@@ -10,6 +10,8 @@ import { configureNotifications } from '@/src/lib/notifications';
 import { initializeRevenueCat } from '@/src/lib/payments';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
+type RootTab = '(tabs)' | 'onboarding' | 'vetting' | '(auth)';
+
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
@@ -53,7 +55,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!initialized || !onboardingChecked) return;
 
-    const rootSegment = segments[0] as string | undefined;
+    const rootSegment = segments[0] as RootTab | undefined;
     const inAuthGroup = rootSegment === '(auth)';
     const inTabsGroup = rootSegment === '(tabs)';
     const inOnboarding = rootSegment === 'onboarding';
@@ -67,7 +69,7 @@ export default function RootLayout() {
       // Logged in: must be in (tabs) or onboarding
       if (inAuthGroup || (!inTabsGroup && !inOnboarding && rootSegment !== 'vetting')) {
         if (onboardingComplete) {
-          router.replace('/vetting' as any);
+          router.replace('/vetting');
         } else {
           router.replace('/onboarding');
         }

@@ -4,9 +4,23 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ExpoSecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import { logger, error as logError } from '@/src/utils/logger';
+
+// Dynamically import expo-secure-store (may not be available in all environments)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let ExpoSecureStore: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ExpoSecureStore = require('expo-secure-store');
+} catch {
+  // expo-secure-store not available (web or missing dependency)
+}
+
+// Check if SecureStore is available (not available on web)
+const IS_WEB = Platform.OS === 'web';
+let secureStoreAvailable = !IS_WEB && !!ExpoSecureStore;
 
 // ============================================
 // TYPES
@@ -27,18 +41,21 @@ export interface StorageResult<T> {
 // CAPABILITY DETECTION
 // ============================================
 
-let isSecureStoreAvailable = false;
-
 export async function checkSecureStorageAvailability(): Promise<boolean> {
+  if (IS_WEB || !ExpoSecureStore) {
+    secureStoreAvailable = false;
+    return false;
+  }
+
   try {
     // Check if SecureStore is available (not available on web)
     const isAvailable = await ExpoSecureStore.isAvailableAsync();
-    isSecureStoreAvailable = isAvailable;
+    secureStoreAvailable = isAvailable;
     logger.info('[SECURE_STORAGE] SecureStore availability:', isAvailable);
     return isAvailable;
   } catch (error) {
     logError('[SECURE_STORAGE] Failed to check SecureStore availability', error as Error);
-    isSecureStoreAvailable = false;
+    secureStoreAvailable = false;
     return false;
   }
 }
@@ -83,8 +100,8 @@ export async function setSecureItem(
 ): Promise<StorageResult<void>> {
   try {
     const encryptedValue = simpleEncrypt(value, ENCRYPTION_KEY);
-    
-    if (isSecureStoreAvailable) {
+
+    if (secureStoreAvailable && ExpoSecureStore) {
       await ExpoSecureStore.setItemAsync(key, encryptedValue, {
         keychainService: 'disciplex_keychain',
         requireAuthentication: options?.requireAuthentication ?? false,
@@ -115,8 +132,8 @@ export async function getSecureItem(
 ): Promise<StorageResult<string>> {
   try {
     let value: string | null = null;
-    
-    if (isSecureStoreAvailable) {
+
+    if (secureStoreAvailable && ExpoSecureStore) {
       value = await ExpoSecureStore.getItemAsync(key, {
         keychainService: 'disciplex_keychain',
         requireAuthentication: options?.requireAuthentication ?? false,
@@ -146,7 +163,7 @@ export async function getSecureItem(
 
 export async function deleteSecureItem(key: string): Promise<StorageResult<void>> {
   try {
-    if (isSecureStoreAvailable) {
+    if (secureStoreAvailable && ExpoSecureStore) {
       await ExpoSecureStore.deleteItemAsync(key, {
         keychainService: 'disciplex_keychain',
       });
@@ -169,7 +186,7 @@ export async function deleteSecureItem(key: string): Promise<StorageResult<void>
 
 export async function clearSecureStorage(): Promise<StorageResult<void>> {
   try {
-    if (isSecureStoreAvailable) {
+    if (secureStoreAvailable) {
       // SecureStore doesn't have a clear all method, need to track keys separately
       await AsyncStorage.removeItem('secure_store_keys');
     } else {
@@ -324,18 +341,18 @@ export async function clearStorage(): Promise<StorageResult<void>> {
 
 function mapAccessibleWhen(
   accessibleWhen?: SecureStorageOptions['accessibleWhen']
-): ExpoSecureStore.Accessible | undefined {
-  if (!accessibleWhen) return undefined;
-  
+): any | undefined {
+  if (!accessibleWhen || !ExpoSecureStore) return undefined;
+
   switch (accessibleWhen) {
     case 'always':
-      return ExpoSecureStore.Accessible.ALWAYS;
+      return ExpoSecureStore.Accessible?.ALWAYS;
     case 'when_unlocked':
-      return ExpoSecureStore.Accessible.WHEN_UNLOCKED;
+      return ExpoSecureStore.Accessible?.WHEN_UNLOCKED;
     case 'first_unlock':
-      return ExpoSecureStore.Accessible.FIRST_UNLOCK_THIS;
+      return ExpoSecureStore.Accessible?.FIRST_UNLOCK_THIS;
     case 'after_first_unlock':
-      return ExpoSecureStore.Accessible.AFTER_FIRST_UNLOCK;
+      return ExpoSecureStore.Accessible?.AFTER_FIRST_UNLOCK;
     default:
       return undefined;
   }

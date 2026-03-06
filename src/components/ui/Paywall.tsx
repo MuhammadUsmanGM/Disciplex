@@ -33,6 +33,7 @@ import {
   TEXT_SECONDARY,
 } from '@/constants/theme';
 import { getSubscriptionPackages, formatPrice, PRICING } from '@/src/lib/payments';
+import { logger, error as logError } from '@/src/utils/logger';
 
 interface PaywallProps {
   visible: boolean;
@@ -82,7 +83,7 @@ export function Paywall({ visible, onClose, onPurchase, restoring }: PaywallProp
 
       setPackages(loadedPackages);
     } catch (error) {
-      console.error('Failed to load packages:', error);
+      logError('Failed to load packages', error as Error);
       // Fallback to default pricing
       setPackages([
         {
@@ -146,7 +147,7 @@ export function Paywall({ visible, onClose, onPurchase, restoring }: PaywallProp
             <Text style={styles.previewLabel}>DRIFTING</Text>
             <View style={styles.previewDivider} />
             <Text style={styles.previewVerdict}>
-              "Your data does not support your identity claim this week."
+              &quot;Your data does not support your identity claim this week.&quot;
             </Text>
           </View>
 

@@ -6,13 +6,15 @@
  */
 
 import { Platform } from 'react-native';
-import { Constants } from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import Purchases, {
   CustomerInfo,
   PACKAGE_TYPE,
   PurchasesOffering,
   PurchasesStoreProduct,
 } from 'react-native-purchases';
+
+import { logger, error as logError, trackError } from '@/src/utils/logger';
 
 // RevenueCat configuration
 const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
@@ -38,18 +40,18 @@ export const PRICING = {
  */
 export async function initializeRevenueCat(userId: string): Promise<void> {
   if (Platform.OS === 'web') {
-    console.log('RevenueCat: Skipping initialization on Web platform.');
+    logger.debug('RevenueCat: Skipping initialization on Web platform.');
     return;
   }
 
   // Skip RevenueCat in Expo Go (native modules not available)
-  if (Constants.expoConfig) {
-    console.log('RevenueCat: Skipping initialization in Expo Go. Use a development build.');
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+    logger.debug('RevenueCat: Skipping initialization in Expo Go. Use a development build.');
     return;
   }
 
   if (!REVENUECAT_API_KEY) {
-    console.log('RevenueCat: API key not configured.');
+    logger.warn('RevenueCat: API key not configured.');
     return;
   }
 
@@ -59,10 +61,10 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
       apiKey: REVENUECAT_API_KEY,
       appUserID: userId,
     });
-    console.log('RevenueCat initialized for user:', userId);
+    logger.info(`RevenueCat initialized for user: ${userId}`);
   } catch (error) {
     // Silently fail in development
-    console.log('RevenueCat: Initialization skipped (Expo Go or invalid key)');
+    logger.debug('RevenueCat: Initialization skipped (Expo Go or invalid key)');
   }
 }
 
@@ -75,7 +77,7 @@ export async function setAppUserId(userId: string): Promise<void> {
   try {
     await Purchases.logIn(userId);
   } catch (error) {
-    console.error('Failed to set app user ID:', error);
+    logError('Failed to set app user ID', error as Error);
   }
 }
 
@@ -84,11 +86,11 @@ export async function setAppUserId(userId: string): Promise<void> {
  */
 export async function logOutFromRevenueCat(): Promise<void> {
   if (!REVENUECAT_API_KEY) return;
-  
+
   try {
     await Purchases.logOut();
   } catch (error) {
-    console.error('Failed to log out from RevenueCat:', error);
+    logError('Failed to log out from RevenueCat', error as Error);
   }
 }
 
@@ -102,7 +104,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo;
   } catch (error) {
-    console.error('Failed to get customer info:', error);
+    logError('Failed to get customer info', error as Error);
     return null;
   }
 }
@@ -121,7 +123,7 @@ export async function isProUser(): Promise<boolean> {
     const activeEntitlements = Object.keys(customerInfo.entitlements.active);
     return activeEntitlements.length > 0;
   } catch (error) {
-    console.error('Failed to check Pro status:', error);
+    trackError(error as Error, { component: 'payments', action: 'isProUser' });
     return false;
   }
 }
@@ -136,7 +138,7 @@ export async function getOfferings(): Promise<PurchasesOffering | null> {
     const offerings = await Purchases.getOfferings();
     return offerings.current;
   } catch (error) {
-    console.error('Failed to get offerings:', error);
+    logError('Failed to get offerings', error as Error);
     return null;
   }
 }
@@ -194,10 +196,10 @@ export async function purchasePackage(
     return { success: true, customerInfo };
   } catch (error: any) {
     if (error.userCancelled) {
-      console.log('User cancelled purchase');
+      logger.debug('User cancelled purchase');
       return { success: false };
     }
-    console.error('Purchase failed:', error);
+    logError('Purchase failed', error as Error);
     return { success: false };
   }
 }
@@ -226,7 +228,7 @@ export async function restorePurchases(): Promise<CustomerInfo | null> {
     const customerInfo = await Purchases.restorePurchases();
     return customerInfo;
   } catch (error) {
-    console.error('Failed to restore purchases:', error);
+    logError('Failed to restore purchases', error as Error);
     return null;
   }
 }
@@ -275,7 +277,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       originalPurchaseDate: entitlement.originalPurchaseDate ?? undefined,
     };
   } catch (error) {
-    console.error('Failed to get subscription status:', error);
+    logError('Failed to get subscription status', error as Error);
     return defaultStatus;
   }
 }

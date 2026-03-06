@@ -7,7 +7,7 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 
-import { config, SUPABASE_CONFIG } from '@/src/config';
+import config, { SUPABASE_CONFIG } from '@/src/config';
 import { logger, error as logError, trackError } from '@/src/utils/logger';
 
 // ============================================
@@ -109,7 +109,10 @@ function isRetryableError(err: Error | PostgrestError | null): boolean {
 // Validate configuration
 if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
   const errorMsg = 'Supabase configuration is missing. Check your .env file.';
-  console.error(errorMsg);
+  logError(errorMsg, new Error('Missing Supabase configuration'), { 
+    hasUrl: !!SUPABASE_CONFIG.url, 
+    hasAnonKey: !!SUPABASE_CONFIG.anonKey 
+  });
   if (config.isProduction) {
     throw new Error(errorMsg);
   }
@@ -186,37 +189,39 @@ export async function executeQuery<T>(
 // ============================================
 
 export async function signUp(email: string, password: string) {
-  return executeQuery(
-    supabase.auth.signUp({
-      email,
-      password,
-    }),
+  const result = await withRetry(
+    () => supabase.auth.signUp({ email, password }),
+    DEFAULT_RETRY_OPTIONS,
     'User signup'
   );
+  return { data: result.data, error: result.error as any, status: result.error ? 500 : 200 };
 }
 
 export async function signIn(email: string, password: string) {
-  return executeQuery(
-    supabase.auth.signInWithPassword({
-      email,
-      password,
-    }),
+  const result = await withRetry(
+    () => supabase.auth.signInWithPassword({ email, password }),
+    DEFAULT_RETRY_OPTIONS,
     'User signin'
   );
+  return { data: result.data, error: result.error as any, status: result.error ? 500 : 200 };
 }
 
 export async function signOut() {
-  return executeQuery(
-    supabase.auth.signOut(),
+  const result = await withRetry(
+    () => supabase.auth.signOut(),
+    DEFAULT_RETRY_OPTIONS,
     'User signout'
   );
+  return { data: null, error: result.error as any, status: result.error ? 500 : 200 };
 }
 
 export async function getCurrentUser() {
-  return executeQuery(
-    supabase.auth.getUser(),
+  const result = await withRetry(
+    () => supabase.auth.getUser(),
+    DEFAULT_RETRY_OPTIONS,
     'Get current user'
   );
+  return { data: result.data.user ? { user: result.data.user } : null, error: result.error as any, status: result.error ? 500 : 200 };
 }
 
 // ============================================
@@ -224,5 +229,5 @@ export async function getCurrentUser() {
 // ============================================
 
 export type { SupabaseClient, PostgrestError, QueryResult, RetryOptions };
-export { withRetry, executeQuery, signUp, signIn, signOut, getCurrentUser };
+export { withRetry };
 export default supabase;
